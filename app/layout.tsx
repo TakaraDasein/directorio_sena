@@ -52,7 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${onest.variable} font-sans`}>
-      <body className="antialiased bg-muted text-foreground pattern-1 min-h-screen">
+      <body className="antialiased text-white pattern-1 min-h-screen">
         {children}
       </body>
     </html>

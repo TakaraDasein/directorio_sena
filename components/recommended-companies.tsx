@@ -85,6 +85,8 @@ const RecommendedCompanies: React.FC = () => {
       max-width: 900px;
       width: calc(100% - 100px);
       height: 400px;
+      padding: 20px;
+      box-sizing: border-box;
     }
     
     .company-item {
@@ -211,6 +213,8 @@ const RecommendedCompanies: React.FC = () => {
         width: 100%;
         height: auto;
         align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
       }
       
       .company-item.active {
@@ -343,15 +347,15 @@ const RecommendedCompanies: React.FC = () => {
   `
 
   return (
-    <section className="snap-panel py-16 lg:py-24 justify-center items-center">
+    <section className="py-40 lg:py-48 px-8 lg:px-16">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
       <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
 
       <style dangerouslySetInnerHTML={{ __html: styles }} />
 
       <div className="container px-6 mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">
             Empresas Más Recomendadas
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -380,7 +384,7 @@ const RecommendedCompanies: React.FC = () => {
                 <div
                   className="company-icon"
                   style={{
-                    color: "#C0C0C0",
+                    color: "#6B7280",
                     textShadow: "0 1px 2px rgba(0,0,0,0.3), 0 0 8px rgba(255,255,255,0.5)",
                     filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8))",
                   }}
@@ -408,7 +412,7 @@ const RecommendedCompanies: React.FC = () => {
                     onClick={() => handleCompanyClick(company.id)}
                   >
                     <div className="inactive-company-inner">
-                      <i className={company.icon} style={{ color: company.defaultColor }}></i>
+                      <i className={company.icon} style={{ color: "#6B7280" }}></i>
                     </div>
                   </div>
                 ),

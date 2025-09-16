@@ -75,90 +75,138 @@ const CompanyStories = () => {
   }
 
   return (
-    <section className="snap-panel py-16 lg:py-24 justify-center items-center">
+    <section className="py-6 lg:py-8">
       <div className="container mx-auto px-6">
         
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4 transition-all duration-500">
-            {currentVideo.title}
-          </h2>
-          <p className="text-muted-foreground text-lg">
-            Historia de {currentVideo.company}
-          </p>
-        </div>
-
         {/* Centered Floating Container */}
-        <div className="flex items-center justify-center">
-          <div className="relative max-w-2xl mx-auto">
+        <div className="flex items-center justify-center px-4 lg:px-8">
+          <div className="relative max-w-3xl lg:max-w-6xl xl:max-w-7xl mx-auto w-full">
             
-            {/* Video Card */}
-            <div className="relative p-8 bg-card rounded-2xl shadow-lg transition-all duration-500 group">
+            {/* Main Container - Mobile: Single Column, Desktop: Two Columns */}
+            <div className="relative p-3 md:p-4 lg:p-6 bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-500 group">
               
-              {/* Video Area */}
-              <div className="relative aspect-video mb-4 rounded-2xl overflow-hidden bg-muted">
+              <div className="lg:flex lg:gap-6">
                 
-                {/* Central Play Button */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-105 transition-all duration-300 cursor-pointer">
-                    <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
+                {/* Video Card - Left Column on Desktop */}
+                <div className="lg:flex-1">
+                  
+                  {/* Video Area */}
+                  <div className="relative aspect-video mb-2 lg:mb-3 rounded-2xl overflow-hidden bg-gray-300 min-h-[180px] md:min-h-[220px] lg:min-h-[260px] xl:min-h-[300px]">
+                    
+                    {/* Central Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-full bg-gray-400 text-white flex items-center justify-center hover:scale-105 transition-all duration-300 cursor-pointer">
+                        <Play className="w-5 h-5 md:w-6 md:h-6 lg:w-8 lg:h-8 ml-0.5" fill="currentColor" />
+                      </div>
+                    </div>
+
+                    {/* Duration Badge */}
+                    <div className="absolute top-3 right-3">
+                      <span className="bg-black/50 text-white text-xs tracking-wide px-2 py-1 rounded">
+                        {currentVideo.duration}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Navigation Controls - Only show on mobile */}
+                  <div className="flex lg:hidden justify-center items-center gap-4 mb-3">
+                    <button 
+                      onClick={prevVideo}
+                      className="w-10 h-10 rounded-full bg-gray-400 text-white flex items-center justify-center hover:bg-gray-500 transition-colors duration-200"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    
+                    <span className="text-white text-sm font-medium">
+                      {selectedVideo + 1} / {videos.length}
+                    </span>
+                    
+                    <button 
+                      onClick={nextVideo}
+                      className="w-10 h-10 rounded-full bg-gray-400 text-white flex items-center justify-center hover:bg-gray-500 transition-colors duration-200"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Video Information */}
+                  <div className="text-center lg:text-left space-y-2 lg:space-y-3 mb-4 lg:mb-5">
+                    <h2 className="text-2xl lg:text-3xl font-bold mb-2 transition-all duration-500 text-white">
+                      {currentVideo.title}
+                    </h2>
+                    <div className="inline-block">
+                      <span className="text-xs lg:text-sm bg-gray-400 text-white px-3 py-1.5 lg:px-4 lg:py-2 rounded-full">
+                        {currentVideo.category}
+                      </span>
+                    </div>
+                    <p className="text-white/80 text-sm lg:text-base mt-3 hidden lg:block">
+                      {currentVideo.description}
+                    </p>
+                  </div>
+
+                  {/* Progress Indicators - Only show on mobile */}
+                  <div className="flex lg:hidden justify-center space-x-2">
+                    {videos.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedVideo(index)}
+                        className={`transition-all duration-300 rounded-full ${
+                          selectedVideo === index 
+                            ? 'w-8 h-2 bg-gray-400' 
+                            : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
 
-                {/* Duration Badge */}
-                <div className="absolute top-3 right-3">
-                  <span className="bg-black/50 text-white text-xs tracking-wide px-2 py-1 rounded">
-                    {currentVideo.duration}
-                  </span>
+                {/* Video List - Right Column on Desktop Only */}
+                <div className="hidden lg:block lg:w-80 xl:w-96">
+                  <div className="space-y-3">
+                    <h3 className="text-white text-lg font-semibold mb-4">Historias Destacadas</h3>
+                    
+                    {videos.map((video, index) => (
+                      <button
+                        key={video.id}
+                        onClick={() => setSelectedVideo(index)}
+                        className={`w-full p-3 rounded-xl transition-all duration-300 text-left group ${
+                          selectedVideo === index 
+                            ? 'bg-white/20 border border-white/30' 
+                            : 'bg-white/5 hover:bg-white/10 border border-transparent hover:border-white/20'
+                        }`}
+                      >
+                        <div className="flex gap-3">
+                          {/* Thumbnail */}
+                          <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-gray-400 flex-shrink-0">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Play className="w-4 h-4 text-white" fill="currentColor" />
+                            </div>
+                            <div className="absolute bottom-1 right-1">
+                              <span className="bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                                {video.duration}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Video Info */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-white font-medium text-sm truncate group-hover:text-white transition-colors">
+                              {video.title}
+                            </h4>
+                            <p className="text-white/70 text-xs mt-1 truncate">
+                              {video.company}
+                            </p>
+                            <div className="mt-1">
+                              <span className="inline-block bg-gray-500/50 text-white text-xs px-2 py-0.5 rounded">
+                                {video.category}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              {/* Navigation Controls */}
-              <div className="flex justify-center items-center gap-4 mb-6">
-                <button 
-                  onClick={prevVideo}
-                  className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-secondary/80 transition-colors duration-200"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                
-                <span className="text-muted-foreground text-sm font-medium">
-                  {selectedVideo + 1} / {videos.length}
-                </span>
-                
-                <button 
-                  onClick={nextVideo}
-                  className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center hover:bg-secondary/80 transition-colors duration-200"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Video Information */}
-              <div className="text-center space-y-3 mb-8">
-                <p className="text-muted-foreground text-sm tracking-wide max-w-md mx-auto">
-                  {currentVideo.description}
-                </p>
-                <div className="inline-block">
-                  <span className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
-                    {currentVideo.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Progress Indicators */}
-              <div className="flex justify-center space-x-2">
-                {videos.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedVideo(index)}
-                    className={`transition-all duration-300 rounded-full ${
-                      selectedVideo === index 
-                        ? 'w-8 h-2 bg-primary' 
-                        : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                    }`}
-                  />
-                ))}
               </div>
 
             </div>
