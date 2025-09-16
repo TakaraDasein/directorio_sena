@@ -27,7 +27,7 @@ const faqs = [
 
 export function FaqSection1() {
   return (
-    <section className="bg-background py-16 md:py-24" aria-labelledby="faq-heading">
+    <section className="snap-panel bg-background py-16 md:py-24 justify-center items-center" aria-labelledby="faq-heading">
       <div className="max-w-2xl gap-12 mx-auto px-6 flex flex-col">
         <div className="flex flex-col text-center gap-5">
           <p className="text-sm md:text-base text-muted-foreground font-semibold">FAQ</p>

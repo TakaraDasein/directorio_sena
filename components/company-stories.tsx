@@ -75,7 +75,7 @@ const CompanyStories = () => {
   }
 
   return (
-    <section className="py-16 lg:py-24">
+    <section className="snap-panel py-16 lg:py-24 justify-center items-center">
       <div className="container mx-auto px-6">
         
         {/* Section Header */}

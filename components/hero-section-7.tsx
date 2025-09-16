@@ -4,7 +4,7 @@ import DirectorySearchBar from "@/components/directory-search-bar"
 
 export function HeroSection7() {
   return (
-    <section className="py-16 lg:py-24 px-6" aria-labelledby="hero-heading">
+    <section className="snap-panel py-16 lg:py-24 px-6 justify-center items-center" aria-labelledby="hero-heading">
       <div className="container px-6 flex flex-col items-center gap-12 lg:gap-16 mx-auto">
         <div className="flex flex-col items-center lg:items-start gap-8 w-full max-w-6xl">
           <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between w-full gap-6 lg:gap-8">

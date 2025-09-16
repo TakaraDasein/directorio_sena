@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 
 export function Footer2() {
   return (
-    <footer className="py-16 lg:py-24" role="contentinfo" aria-label="Site footer">
+    <footer className="snap-panel py-16 lg:py-24 justify-center items-center" role="contentinfo" aria-label="Site footer">
       <div className="container px-6 mx-auto flex flex-col gap-12 lg:gap-16">
         <div className="flex flex-col gap-12">
           <div className="flex flex-col lg:flex-row md:justify-between md:items-center gap-12">

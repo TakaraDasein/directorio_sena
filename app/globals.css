@@ -63,3 +63,21 @@ body {
   height: 100%;
   animation: patternMove 3s linear infinite;
 }
+
+/* GSAP Scroll Snap Styles */
+.snap-panel {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  position: relative;
+}
+
+.scroll-snap-container {
+  height: auto;
+}
+
+/* Optimizaciones de rendimiento para scroll snap */
+.snap-panel * {
+  will-change: transform;
+}
