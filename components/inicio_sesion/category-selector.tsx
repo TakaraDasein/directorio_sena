@@ -1,0 +1,140 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { User, Building2, Briefcase, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+
+interface CategoryOption {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const CategorySelector: React.FC = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const router = useRouter();
+
+  const categories: CategoryOption[] = [
+    {
+      id: "egresado",
+      title: "Egresado SENA",
+      description: "Soy egresado del SENA y quiero conectar con otros profesionales y mostrar mi experiencia.",
+      icon: <User className="h-8 w-8" />,
+      color: "bg-primary"
+    },
+    {
+      id: "empresa",
+      title: "Empresa", 
+      description: "Represento una empresa y busco talento egresado del SENA para proyectos y oportunidades.",
+      icon: <Building2 className="h-8 w-8" />,
+      color: "bg-primary"
+    },
+    {
+      id: "instructor",
+      title: "Instructor SENA",
+      description: "Soy instructor del SENA y quiero estar disponible para la comunidad educativa.",
+      icon: <Briefcase className="h-8 w-8" />,
+      color: "bg-primary"
+    }
+  ];
+
+  const handleContinue = () => {
+    if (selectedCategory) {
+      // Guardar categoría seleccionada en localStorage
+      localStorage.setItem("selectedCategory", selectedCategory);
+      // Omitir selección de plataformas y ir directamente a perfil creado
+      router.push("/profile-created");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md mx-auto space-y-8">
+        {/* Progress indicator */}
+        <div className="flex justify-center gap-2 mb-8">
+          <div className="w-8 h-1 rounded-full bg-primary"></div>
+          <div className="w-8 h-1 rounded-full bg-primary"></div>
+          <div className="w-8 h-1 rounded-full bg-gray-300"></div>
+        </div>
+
+        {/* Header */}
+        <div className="text-center space-y-4">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+              <Image
+                src="/logos/sena_logo.svg"
+                alt="SENA Logo"
+                width={32}
+                height={32}
+                className="transition-transform duration-300 hover:scale-110 filter brightness-0 invert"
+              />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            ¿Cuál es tu objetivo principal en el directorio SENA?
+          </h1>
+          <p className="text-gray-600">
+            Esto nos ayuda a personalizar tu perfil profesional.
+          </p>
+        </div>
+
+        {/* Category Options */}
+        <div className="space-y-4">
+          {categories.map((category) => (
+            <Card
+              key={category.id}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg bg-white ${
+                selectedCategory === category.id
+                  ? "ring-2 ring-primary border-primary shadow-lg"
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
+              onClick={() => setSelectedCategory(category.id)}
+            >
+              <CardContent className="p-6 bg-white">
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {category.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {category.description}
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded-xl text-white ${category.color} flex-shrink-0`}>
+                    {category.icon}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Continue Button */}
+        <div className="pt-6">
+          <Button
+            onClick={handleContinue}
+            disabled={!selectedCategory}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 text-lg font-medium"
+          >
+            Continuar
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Footer note */}
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            Podrás cambiar esto más tarde en la configuración de tu perfil
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { CategorySelector };
