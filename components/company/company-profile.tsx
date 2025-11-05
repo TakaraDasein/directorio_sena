@@ -85,6 +85,10 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   const [reviews, setReviews] = useState<any[]>([])
   const [isLoadingReviews, setIsLoadingReviews] = useState(true)
   
+  // Estados para horarios
+  const [businessHours, setBusinessHours] = useState<any[]>([])
+  const [isLoadingHours, setIsLoadingHours] = useState(true)
+  
   // Obtener color personalizado
   const primaryColor = (company as any).custom_color || company.theme_color || '#2F4D2A';
   
@@ -168,6 +172,7 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   // Cargar reviews de la empresa
   useEffect(() => {
     loadReviews()
+    loadBusinessHours()
   }, [company.id])
   
   const loadReviews = async () => {
@@ -189,6 +194,27 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
       console.error('Error al cargar reviews:', error)
     } finally {
       setIsLoadingReviews(false)
+    }
+  }
+  
+  const loadBusinessHours = async () => {
+    try {
+      setIsLoadingHours(true)
+      const supabase = createClient()
+      
+      const { data, error } = await supabase
+        .from('business_hours')
+        .select('*')
+        .eq('company_id', company.id)
+        .order('day_of_week', { ascending: true })
+      
+      if (error) throw error
+      
+      setBusinessHours(data || [])
+    } catch (error) {
+      console.error('Error al cargar horarios:', error)
+    } finally {
+      setIsLoadingHours(false)
     }
   }
   
@@ -998,14 +1024,49 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
                   <h3 className="font-semibold">Horarios</h3>
                 </div>
                 
-                <div className="space-y-2">
-                  {daysOfWeek.map((day) => (
-                    <div key={day} className="flex justify-between text-sm">
-                      <span className="font-medium">{day}</span>
-                      <span className="text-gray-600">7:00 am – 6:00 pm</span>
-                    </div>
-                  ))}
-                </div>
+                {isLoadingHours ? (
+                  <div className="text-center py-4">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-primary"></div>
+                  </div>
+                ) : businessHours.length === 0 ? (
+                  <p className="text-sm text-gray-500">No hay horarios configurados</p>
+                ) : (
+                  <div className="space-y-2">
+                    {daysOfWeek.map((day, index) => {
+                      const dayNumber = index === 6 ? 0 : index + 1; // Ajustar domingo (0)
+                      const hourData = businessHours.find(h => h.day_of_week === dayNumber);
+                      
+                      let timeDisplay = '7:00 am – 6:00 pm'; // Default
+                      
+                      if (hourData) {
+                        if (hourData.is_closed) {
+                          timeDisplay = 'Cerrado';
+                        } else if (hourData.is_24_hours) {
+                          timeDisplay = 'Abierto 24 horas';
+                        } else if (hourData.opens_at && hourData.closes_at) {
+                          // Formatear horas de 24h a 12h
+                          const formatTime = (time: string) => {
+                            const [hours, minutes] = time.split(':');
+                            const hour = parseInt(hours);
+                            const ampm = hour >= 12 ? 'pm' : 'am';
+                            const hour12 = hour % 12 || 12;
+                            return `${hour12}:${minutes} ${ampm}`;
+                          };
+                          timeDisplay = `${formatTime(hourData.opens_at)} – ${formatTime(hourData.closes_at)}`;
+                        }
+                      }
+                      
+                      return (
+                        <div key={day} className="flex justify-between text-sm">
+                          <span className="font-medium">{day}</span>
+                          <span className={`${hourData?.is_closed ? 'text-red-600' : 'text-gray-600'}`}>
+                            {timeDisplay}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

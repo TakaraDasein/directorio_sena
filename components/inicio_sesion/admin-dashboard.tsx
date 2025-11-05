@@ -32,7 +32,9 @@ import {
   MessageSquare,
   Star,
   Check,
-  XCircle as XCircleIcon
+  XCircle as XCircleIcon,
+  Clock,
+  LogOut
 } from "lucide-react";
 
 interface LinkItem {
@@ -99,7 +101,6 @@ export function AdminDashboard() {
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [setupProgress, setSetupProgress] = useState(67);
   const [isLoading, setIsLoading] = useState(true);
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ title: "", url: "" });
@@ -133,6 +134,10 @@ export function AdminDashboard() {
   const [isLoadingReviews, setIsLoadingReviews] = useState(false);
   const [pendingReviewsCount, setPendingReviewsCount] = useState(0);
   
+  // Estados para horarios
+  const [businessHours, setBusinessHours] = useState<any[]>([]);
+  const [isLoadingHours, setIsLoadingHours] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -141,12 +146,9 @@ export function AdminDashboard() {
     { id: "links", label: "Enlaces", icon: Link, active: true },
     { id: "shop", label: "Tienda", icon: Store },
     { id: "images", label: "Imágenes", icon: ImageIcon },
+    { id: "hours", label: "Horarios", icon: Clock },
     { id: "reviews", label: "Opiniones", icon: MessageSquare, badge: pendingReviewsCount > 0 ? String(pendingReviewsCount) : undefined },
-    { id: "design", label: "Diseño", icon: Palette },
-    { id: "earn", label: "Ganar", icon: DollarSign, badge: "NUEVO" },
-    { id: "overview", label: "Vista General", icon: BarChart3 },
-    { id: "audience", label: "Audiencia", icon: Users },
-    { id: "insights", label: "Estadísticas", icon: TrendingUp }
+    { id: "design", label: "Diseño", icon: Palette }
   ];
 
   useEffect(() => {
@@ -156,6 +158,7 @@ export function AdminDashboard() {
   useEffect(() => {
     if (companyData?.id) {
       loadReviews();
+      loadBusinessHours();
     }
   }, [companyData?.id]);
 
@@ -323,6 +326,114 @@ export function AdminDashboard() {
     } finally {
       setIsLoadingReviews(false);
     }
+  };
+
+  const loadBusinessHours = async () => {
+    if (!companyData?.id) return;
+    
+    try {
+      setIsLoadingHours(true);
+      
+      const { data, error } = await supabase
+        .from('business_hours')
+        .select('*')
+        .eq('company_id', companyData.id)
+        .order('day_of_week', { ascending: true });
+      
+      if (error) {
+        console.error('Error al cargar horarios:', error);
+        return;
+      }
+      
+      // Si no hay horarios, crear estructura por defecto
+      if (!data || data.length === 0) {
+        const defaultHours = [];
+        for (let day = 0; day <= 6; day++) {
+          defaultHours.push({
+            day_of_week: day,
+            opens_at: '07:00',
+            closes_at: '18:00',
+            is_closed: false,
+            is_24_hours: false
+          });
+        }
+        setBusinessHours(defaultHours);
+      } else {
+        setBusinessHours(data);
+      }
+      
+    } catch (error) {
+      console.error('Error al cargar horarios:', error);
+    } finally {
+      setIsLoadingHours(false);
+    }
+  };
+
+  const saveBusinessHours = async () => {
+    if (!companyData?.id) return;
+    
+    try {
+      // Eliminar horarios existentes
+      await supabase
+        .from('business_hours')
+        .delete()
+        .eq('company_id', companyData.id);
+      
+      // Insertar nuevos horarios
+      const hoursToInsert = businessHours.map(hour => ({
+        company_id: companyData.id,
+        day_of_week: hour.day_of_week,
+        opens_at: hour.is_closed || hour.is_24_hours ? null : hour.opens_at,
+        closes_at: hour.is_closed || hour.is_24_hours ? null : hour.closes_at,
+        is_closed: hour.is_closed,
+        is_24_hours: hour.is_24_hours
+      }));
+      
+      const { error } = await supabase
+        .from('business_hours')
+        .insert(hoursToInsert);
+      
+      if (error) throw error;
+      
+      alert('Horarios guardados exitosamente');
+      loadBusinessHours();
+      
+    } catch (error) {
+      console.error('Error al guardar horarios:', error);
+      alert('Error al guardar los horarios');
+    }
+  };
+
+  const updateHour = (dayOfWeek: number, field: string, value: any) => {
+    setBusinessHours(prevHours => {
+      // Asegurar que prevHours sea un array
+      const currentHours = prevHours || [];
+      
+      // Buscar si ya existe un horario para este día
+      const existingIndex = currentHours.findIndex(h => h?.day_of_week === dayOfWeek);
+      
+      if (existingIndex >= 0) {
+        // Actualizar horario existente
+        const newHours = [...currentHours];
+        newHours[existingIndex] = { 
+          ...newHours[existingIndex], 
+          day_of_week: dayOfWeek, // Asegurar que siempre tenga day_of_week
+          [field]: value 
+        };
+        return newHours;
+      } else {
+        // Crear nuevo horario para este día
+        const newHour = {
+          day_of_week: dayOfWeek,
+          opens_at: '07:00',
+          closes_at: '18:00',
+          is_closed: field === 'is_closed' ? value : false,
+          is_24_hours: field === 'is_24_hours' ? value : false,
+          [field]: value
+        };
+        return [...currentHours, newHour];
+      }
+    });
   };
 
   const approveReview = async (reviewId: string) => {
@@ -1804,6 +1915,205 @@ export function AdminDashboard() {
     </div>
   );
 
+  const renderHoursSection = () => {
+    const daysOfWeek = [
+      { id: 1, label: 'LUNES' },
+      { id: 2, label: 'MARTES' },
+      { id: 3, label: 'MIÉRCOLES' },
+      { id: 4, label: 'JUEVES' },
+      { id: 5, label: 'VIERNES' },
+      { id: 6, label: 'SÁBADOS' },
+      { id: 0, label: 'DOMINGOS' }
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Horarios de Atención</h2>
+            <p className="text-gray-600">Configura los días y horarios en que atiendes a tus clientes</p>
+          </div>
+          <button
+            onClick={saveBusinessHours}
+            className="flex items-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+          >
+            <Save className="w-5 h-5" />
+            Guardar Horarios
+          </button>
+        </div>
+
+        {/* Horarios List */}
+        {isLoadingHours ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[hsl(111,29%,23%)]"></div>
+            <p className="mt-4 text-gray-600">Cargando horarios...</p>
+          </div>
+        ) : (
+          <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
+            <div className="space-y-4">
+              {daysOfWeek.map((day) => {
+                const hourData = (businessHours || []).find(h => h?.day_of_week === day.id) || {
+                  day_of_week: day.id,
+                  opens_at: '07:00',
+                  closes_at: '18:00',
+                  is_closed: false,
+                  is_24_hours: false
+                };
+
+                return (
+                  <div 
+                    key={day.id}
+                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    {/* Día de la semana */}
+                    <div className="w-32">
+                      <p className="font-bold text-gray-800">{day.label}</p>
+                    </div>
+
+                    {/* Switches de estado */}
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hourData.is_closed || false}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setBusinessHours(prevHours => {
+                              const currentHours = prevHours || [];
+                              const existingIndex = currentHours.findIndex(h => h?.day_of_week === day.id);
+                              
+                              if (existingIndex >= 0) {
+                                const newHours = [...currentHours];
+                                newHours[existingIndex] = { 
+                                  ...newHours[existingIndex],
+                                  day_of_week: day.id,
+                                  is_closed: checked,
+                                  is_24_hours: checked ? false : newHours[existingIndex].is_24_hours
+                                };
+                                return newHours;
+                              } else {
+                                return [...currentHours, {
+                                  day_of_week: day.id,
+                                  opens_at: '07:00',
+                                  closes_at: '18:00',
+                                  is_closed: checked,
+                                  is_24_hours: false
+                                }];
+                              }
+                            });
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                        />
+                        <span className="text-sm text-gray-700">Cerrado</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hourData.is_24_hours || false}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setBusinessHours(prevHours => {
+                              const currentHours = prevHours || [];
+                              const existingIndex = currentHours.findIndex(h => h?.day_of_week === day.id);
+                              
+                              if (existingIndex >= 0) {
+                                const newHours = [...currentHours];
+                                newHours[existingIndex] = { 
+                                  ...newHours[existingIndex],
+                                  day_of_week: day.id,
+                                  is_24_hours: checked,
+                                  is_closed: checked ? false : newHours[existingIndex].is_closed
+                                };
+                                return newHours;
+                              } else {
+                                return [...currentHours, {
+                                  day_of_week: day.id,
+                                  opens_at: '07:00',
+                                  closes_at: '18:00',
+                                  is_closed: false,
+                                  is_24_hours: checked
+                                }];
+                              }
+                            });
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <span className="text-sm text-gray-700">24 horas</span>
+                      </label>
+                    </div>
+
+                    {/* Horarios */}
+                    {!hourData.is_closed && !hourData.is_24_hours && (
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-gray-600">Abre:</label>
+                          <input
+                            type="time"
+                            value={hourData.opens_at || '07:00'}
+                            onChange={(e) => updateHour(day.id, 'opens_at', e.target.value)}
+                            className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
+                          />
+                        </div>
+                        <span className="text-gray-400">—</span>
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm text-gray-600">Cierra:</label>
+                          <input
+                            type="time"
+                            value={hourData.closes_at || '18:00'}
+                            onChange={(e) => updateHour(day.id, 'closes_at', e.target.value)}
+                            className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Estado visual */}
+                    {hourData.is_closed && (
+                      <div className="flex-1 text-center">
+                        <span className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium">
+                          Cerrado
+                        </span>
+                      </div>
+                    )}
+                    {hourData.is_24_hours && (
+                      <div className="flex-1 text-center">
+                        <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium">
+                          Abierto 24 horas
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Info Panel */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-xl p-6">
+          <div className="flex gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Clock className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold text-blue-900 mb-2">Sobre los horarios de atención</h4>
+              <ul className="space-y-1 text-sm text-blue-800">
+                <li>• Los horarios se muestran en tu perfil público para que tus clientes sepan cuándo estás disponible</li>
+                <li>• Marca "Cerrado" para días que no atiendes</li>
+                <li>• Marca "24 horas" si tu negocio está disponible todo el día</li>
+                <li>• Los horarios se muestran en formato de 12 horas para los visitantes</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderDesignSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -2035,6 +2345,8 @@ export function AdminDashboard() {
         return renderShopSection();
       case "images":
         return renderImagesSection();
+      case "hours":
+        return renderHoursSection();
       case "reviews":
         return renderReviewsSection();
       case "design":
@@ -2045,7 +2357,7 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[hsl(111,29%,23%)]/5 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-[hsl(111,2%,23%)]/5 flex">
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -2125,24 +2437,20 @@ export function AdminDashboard() {
           ))}
         </nav>
 
-        {/* Setup Progress */}
+        {/* Logout Button */}
         <div className="p-4 border-t-2 border-gray-200 mt-auto absolute bottom-0 left-0 right-0 bg-white">
-          <div className="bg-gradient-to-br from-[hsl(111,29%,23%)]/10 to-[hsl(111,29%,23%)]/5 rounded-xl p-5 border-2 border-[hsl(111,29%,23%)]/20">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-bold text-gray-900">Tu lista de configuración</span>
-              <span className="text-sm font-bold text-[hsl(111,29%,23%)]">{setupProgress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-              <div 
-                className="bg-gradient-to-r from-[hsl(111,29%,23%)] to-[hsl(111,29%,18%)] h-3 rounded-full transition-all duration-300 shadow-sm"
-                style={{ width: `${setupProgress}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-gray-600 mb-4 font-medium">4 de 6 completadas</p>
-            <button className="w-full bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white text-sm font-semibold py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg">
-              Finalizar configuración
-            </button>
-          </div>
+          <button
+            onClick={async () => {
+              const { error } = await supabase.auth.signOut();
+              if (!error) {
+                router.push('/auth');
+              }
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all font-medium text-red-600 hover:bg-red-50"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Cerrar Sesión</span>
+          </button>
         </div>
       </div>
 
@@ -2158,24 +2466,10 @@ export function AdminDashboard() {
               >
                 <Menu className="w-6 h-6 text-[hsl(111,29%,23%)]" />
               </button>
-              <div className="relative">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  className="pl-11 pr-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(111,29%,23%)] focus:border-transparent text-gray-900 font-medium"
-                />
-              </div>
+              
             </div>
 
             <div className="flex items-center gap-3">
-              <button className="p-2.5 hover:bg-[hsl(111,29%,23%)]/10 rounded-lg transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-700" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              <button className="p-2.5 hover:bg-[hsl(111,29%,23%)]/10 rounded-lg transition-colors">
-                <Settings className="w-5 h-5 text-gray-700" />
-              </button>
               <div className="w-10 h-10 bg-gradient-to-br from-[hsl(111,29%,23%)] to-[hsl(111,29%,18%)] rounded-xl flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-transform">
                 <span className="text-white font-bold text-lg">
                   {userProfile?.name?.charAt(0).toUpperCase() || "U"}
