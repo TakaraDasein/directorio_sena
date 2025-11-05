@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Building2, MapPin, Search, Loader2, Filter } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { LpNavbar1 } from "@/components/lp-navbar-1"
 
 export const dynamic = 'force-dynamic'
 
@@ -107,19 +108,18 @@ function SearchContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-white">
-      {/* Header */}
-      <div className="bg-primary text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-4">Directorio Empresarial SENA</h1>
-          <p className="text-lg text-white/80">
-            Encuentra empresas, egresados e instructores de la comunidad SENA
-          </p>
-        </div>
-      </div>
-
+      {/* Navbar */}
+      <LpNavbar1 />
+      
       {/* Search Bar */}
-      <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="bg-white border-b sticky top-[72px] z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">Directorio Empresarial</h1>
+            <p className="text-gray-600 mt-1">
+              Encuentra empresas, egresados e instructores de la comunidad SENA
+            </p>
+          </div>
           <form onSubmit={handleSearch} className="flex gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />

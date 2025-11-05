@@ -1703,6 +1703,23 @@ export function AdminDashboard() {
         </div>
       </div>
 
+      {/* Información general */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <ImageIcon className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h4 className="font-bold text-blue-900 mb-1">Recomendaciones de imágenes</h4>
+            <ul className="space-y-1 text-sm text-blue-800">
+              <li>• <strong>Peso máximo:</strong> 800 KB por imagen</li>
+              <li>• <strong>Formatos:</strong> JPG, PNG, WebP</li>
+              <li>• Imágenes de alta calidad para mejor visualización</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* Logo Section */}
       <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
         <div className="flex items-center gap-3 mb-4">
@@ -1711,7 +1728,10 @@ export function AdminDashboard() {
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Logo</h3>
-            <p className="text-sm text-gray-600">Imagen que representa tu empresa (recomendado: 400x400px)</p>
+            <p className="text-sm text-gray-600">
+              <strong>Tamaño sugerido:</strong> 400x400px (cuadrado) • 
+              <strong className="ml-1">Máximo:</strong> 800 KB
+            </p>
           </div>
         </div>
 
@@ -1779,7 +1799,10 @@ export function AdminDashboard() {
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-900">Imagen de Portada</h3>
-            <p className="text-sm text-gray-600">Imagen principal de tu perfil (recomendado: 1920x480px)</p>
+            <p className="text-sm text-gray-600">
+              <strong>Tamaño sugerido:</strong> 1920x480px (panorámico) • 
+              <strong className="ml-1">Máximo:</strong> 800 KB
+            </p>
           </div>
         </div>
 
@@ -1846,7 +1869,11 @@ export function AdminDashboard() {
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900">Galería de Imágenes</h3>
-              <p className="text-sm text-gray-600">Imágenes adicionales para mostrar tu trabajo ({imageUrls.gallery.length} imágenes)</p>
+              <p className="text-sm text-gray-600">
+                <strong>Tamaño sugerido:</strong> 1200x800px • 
+                <strong className="ml-1">Máximo:</strong> 800 KB c/u • 
+                <span className="text-gray-700">({imageUrls.gallery.length}/3 imágenes)</span>
+              </p>
             </div>
           </div>
           <input
@@ -1855,18 +1882,23 @@ export function AdminDashboard() {
             accept="image/*"
             className="hidden"
             onChange={(e) => handleFileSelect(e, 'gallery')}
-            disabled={uploadingImage === 'gallery'}
+            disabled={uploadingImage === 'gallery' || imageUrls.gallery.length >= 3}
           />
           <label
             htmlFor="gallery-upload"
             className={`flex items-center gap-2 px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium ${
-              uploadingImage === 'gallery' ? 'opacity-50 cursor-not-allowed' : ''
+              uploadingImage === 'gallery' || imageUrls.gallery.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
             {uploadingImage === 'gallery' ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 Subiendo...
+              </>
+            ) : imageUrls.gallery.length >= 3 ? (
+              <>
+                <Check className="w-5 h-5" />
+                Límite alcanzado (3/3)
               </>
             ) : (
               <>
@@ -1876,6 +1908,14 @@ export function AdminDashboard() {
             )}
           </label>
         </div>
+
+        {imageUrls.gallery.length >= 3 && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>Límite alcanzado:</strong> Has subido el máximo de 3 imágenes. Elimina una para agregar otra.
+            </p>
+          </div>
+        )}
 
         {/* Gallery Grid */}
         {imageUrls.gallery.length > 0 ? (
