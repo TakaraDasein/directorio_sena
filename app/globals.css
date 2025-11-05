@@ -2,42 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Default */
+/* Default - Sistema de colores coherente */
 @layer base {
   :root {
-    --background: 230 33% 21%;
-    --foreground: 0 0% 100%;
-    --card: 230 28% 25%;
-    --card-foreground: 0 0% 100%;
+    /* Backgrounds - Blancos y grises neutros */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    
+    /* Cards - Blanco puro con borde gris */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    
+    /* Popover - Blanco */
     --popover: 0 0% 100%;
-    --popover-foreground: 230 28% 25%;
+    --popover-foreground: 0 0% 9%;
+    
+    /* Primary - Verde SENA */
     --primary: 111 29% 23%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 231 48% 89%;
-    --secondary-foreground: 230 33% 21%;
-    --muted: 230 40% 14%;
-    --muted-foreground: 231 54% 82%;
-    --accent: 230 28% 25%;
+    
+    /* Secondary - Gris suave */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    
+    /* Muted - Gris medio */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    
+    /* Accent - Verde SENA */
+    --accent: 111 29% 23%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 86% 97%;
-    --border: 230 27% 27%;
-    --input: 230 33% 21%;
+    
+    /* Destructive - Rojo */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders - Gris claro */
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
     --ring: 111 29% 23%;
+    
     --radius: 0.750rem;
-    --chart-1: 173 58% 39%;
-    --chart-2: 12 76% 61%;
+    
+    /* Charts - Paleta coherente */
+    --chart-1: 111 29% 23%;
+    --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 240 6% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 5% 96%;
-    --sidebar-accent-foreground: 240 6% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 240 5% 65%;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 111 29% 23%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 89%;
+    --sidebar-ring: 111 29% 23%;
+    
     --font-onest: "Onest", sans-serif;
   }
 }
@@ -80,4 +103,55 @@ body {
 
 .group:hover .group-hover\:rotate-y-80 {
   transform: rotateY(-80deg);
+}
+
+/* Estilos personalizados para el Directorio SENA */
+@layer components {
+  .sena-btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2.5 rounded-lg transition-colors;
+  }
+  
+  .sena-btn-secondary {
+    @apply border-2 border-primary text-primary hover:bg-primary/5 font-semibold px-6 py-2.5 rounded-lg transition-colors;
+  }
+  
+  .sena-badge {
+    @apply bg-secondary text-secondary-foreground border border-border px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .sena-card {
+    @apply bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow border border-border;
+  }
+  
+  .sena-heading {
+    @apply text-primary font-bold;
+  }
+  
+  .sena-text-muted {
+    @apply text-muted-foreground;
+  }
+  
+  .sena-icon-box {
+    @apply p-3 bg-secondary rounded-full inline-flex items-center justify-center;
+  }
+  
+  .sena-icon-box-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+}
+
+/* Animaciones suaves */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift {
+    @apply transition-smooth;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
 }

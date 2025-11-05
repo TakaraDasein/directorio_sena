@@ -3,53 +3,25 @@
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, Building2, Send } from "lucide-react"
+import { Search, Building2, Send, Loader2 } from "lucide-react"
 import useDebounce from "@/flow_componentes/use-debounce"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 interface Company {
   id: string
-  name: string
+  slug: string
+  company_name: string
   category: string
-  services: string[]
+  industry: string | null
+  city: string | null
+  short_description: string | null
 }
 
 interface SearchResult {
   companies: Company[]
+  isLoading: boolean
 }
-
-// Mock data de empresas del directorio SENA
-const allCompanies: Company[] = [
-  {
-    id: "1",
-    name: "TechCali Solutions",
-    category: "Tecnología",
-    services: ["Desarrollo Web", "Apps Móviles", "Consultoría IT", "E-commerce"]
-  },
-  {
-    id: "2", 
-    name: "EcoVerde Cali",
-    category: "Sostenibilidad",
-    services: ["Energías Renovables", "Consultoría Ambiental", "Reciclaje", "Auditorías Verdes"]
-  },
-  {
-    id: "3",
-    name: "Gastronomía Valluna",
-    category: "Gastronomía",
-    services: ["Catering", "Eventos", "Comida Tradicional", "Delivery"]
-  },
-  {
-    id: "4",
-    name: "Textiles del Valle",
-    category: "Textil",
-    services: ["Confección", "Diseño de Moda", "Uniformes", "Bordados"]
-  },
-  {
-    id: "5",
-    name: "Logística Express",
-    category: "Transporte",
-    services: ["Transporte Urbano", "Logística", "Almacenamiento", "Distribución"]
-  }
-]
 
 function DirectorySearchBar() {
   const [query, setQuery] = useState("")
@@ -58,31 +30,71 @@ function DirectorySearchBar() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
-  const debouncedQuery = useDebounce(query, 200)
+  const debouncedQuery = useDebounce(query, 300)
+  const supabase = createClient()
+  const router = useRouter()
 
+  // Buscar empresas en Supabase
   useEffect(() => {
     if (!isFocused) {
       setResult(null)
       return
     }
 
-    if (!debouncedQuery) {
-      setResult({ companies: allCompanies })
-      return
+    const searchCompanies = async () => {
+      setResult(prev => ({ companies: prev?.companies || [], isLoading: true }))
+      
+      try {
+        let query = supabase
+          .from('companies')
+          .select('id, slug, company_name, category, industry, city, short_description')
+          .eq('is_active', true)
+          .eq('visibility', 'public')
+          .order('views_count', { ascending: false })
+          .limit(10)
+
+        // Si hay búsqueda, filtrar
+        if (debouncedQuery) {
+          query = query.or(`company_name.ilike.%${debouncedQuery}%,industry.ilike.%${debouncedQuery}%,city.ilike.%${debouncedQuery}%,short_description.ilike.%${debouncedQuery}%`)
+        }
+
+        const { data, error } = await query
+
+        if (error) throw error
+
+        setResult({
+          companies: data || [],
+          isLoading: false
+        })
+      } catch (error) {
+        console.error('Error buscando empresas:', error)
+        setResult({
+          companies: [],
+          isLoading: false
+        })
+      }
     }
 
-    const normalizedQuery = debouncedQuery.toLowerCase().trim()
-    const filteredCompanies = allCompanies.filter((company) => {
-      const searchableText = `${company.name} ${company.category} ${company.services.join(' ')}`.toLowerCase()
-      return searchableText.includes(normalizedQuery)
-    })
-
-    setResult({ companies: filteredCompanies })
-  }, [debouncedQuery, isFocused])
+    searchCompanies()
+  }, [debouncedQuery, isFocused, supabase])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value)
     setIsTyping(true)
+  }
+
+  const handleCompanyClick = (company: Company) => {
+    setSelectedCompany(company)
+    setQuery(company.company_name)
+    setIsFocused(false)
+    router.push(`/${company.slug}`)
+  }
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`)
+    }
   }
 
   const container = {
@@ -168,42 +180,56 @@ function DirectorySearchBar() {
           >
             Directorio Empresarial SENA
           </motion.label>
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Buscar empresas..."
-              value={query}
-              onChange={handleInputChange}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="pl-4 pr-12 py-3 h-12 text-base rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-0 backdrop-blur-sm transition-all duration-300 w-full"
-            />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5">
-              <AnimatePresence mode="popLayout">
-                {query.length > 0 ? (
-                  <motion.div
-                    key="send"
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 20, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Send className="w-5 h-5 text-white/70" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="search"
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: 20, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Search className="w-5 h-5 text-white/70" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Buscar empresas..."
+                value={query}
+                onChange={handleInputChange}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className="pl-4 pr-12 py-3 h-12 text-base rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/70 focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-0 backdrop-blur-sm transition-all duration-300 w-full"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5">
+                <AnimatePresence mode="popLayout">
+                  {result?.isLoading ? (
+                    <motion.div
+                      key="loading"
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 20, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Loader2 className="w-5 h-5 text-white/70 animate-spin" />
+                    </motion.div>
+                  ) : query.length > 0 ? (
+                    <motion.div
+                      key="send"
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 20, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <button type="submit" className="focus:outline-none">
+                        <Send className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="search"
+                      initial={{ y: -20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 20, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Search className="w-5 h-5 text-white/70" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
+          </form>
         </div>
 
         <div className="w-full">
@@ -217,46 +243,56 @@ function DirectorySearchBar() {
                 exit="exit"
               >
                 <motion.ul>
-                  {result.companies.map((company) => (
+                  {result.companies.length > 0 ? (
+                    result.companies.map((company) => (
+                      <motion.li
+                        key={company.id}
+                        className="px-4 py-3 flex items-center justify-between hover:bg-white/5 cursor-pointer rounded-lg"
+                        variants={item}
+                        layout
+                        onClick={() => handleCompanyClick(company)}
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="flex-shrink-0 bg-white/20 rounded-lg flex items-center justify-center w-10 h-10">
+                            <Building2 className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-white truncate">
+                                {company.company_name}
+                              </span>
+                              {company.category && (
+                                <span className="text-xs text-white/60 capitalize">{company.category}</span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {company.industry && (
+                                <span className="text-xs text-white/80 bg-white/10 px-2 py-0.5 rounded-full">
+                                  {company.industry}
+                                </span>
+                              )}
+                              {company.city && (
+                                <span className="text-xs text-white/80 bg-white/10 px-2 py-0.5 rounded-full">
+                                  {company.city}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.li>
+                    ))
+                  ) : (
                     <motion.li
-                      key={company.id}
-                      className="px-4 py-3 flex items-center justify-between hover:bg-white/5 cursor-pointer rounded-lg"
+                      className="px-4 py-6 text-center text-white/60"
                       variants={item}
-                      layout
-                      onClick={() => setSelectedCompany(company)}
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="flex-shrink-0 bg-white/20 rounded-lg flex items-center justify-center w-10 h-10">
-                          <Building2 className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-white truncate">{company.name}</span>
-                            <span className="text-xs text-white/60">{company.category}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {company.services.slice(0, 3).map((service, index) => (
-                              <span 
-                                key={index} 
-                                className="text-xs text-white/80 bg-white/10 px-2 py-0.5 rounded-full"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                            {company.services.length > 3 && (
-                              <span className="text-xs text-white/60">
-                                +{company.services.length - 3} más
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      {result.isLoading ? 'Buscando...' : 'No se encontraron empresas'}
                     </motion.li>
-                  ))}
+                  )}
                 </motion.ul>
                 <div className="mt-2 px-4 py-3 border-t border-white/20">
                   <div className="flex items-center justify-between text-xs text-white/60">
-                    <span>Presiona Enter para buscar</span>
+                    <span>{result.companies.length} {result.companies.length === 1 ? 'empresa encontrada' : 'empresas encontradas'}</span>
                     <span>ESC para cancelar</span>
                   </div>
                 </div>

@@ -1,10 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 interface CompanyData {
-  id: number
+  id: string
+  slug: string
   background: string
   icon: string
   main: string
@@ -14,52 +16,143 @@ interface CompanyData {
 
 const RecommendedCompanies: React.FC = () => {
   const [activeCompany, setActiveCompany] = useState<number>(0)
+  const [companies, setCompanies] = useState<CompanyData[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
-  const companiesData: CompanyData[] = [
-    {
-      id: 0,
-      background: "/placeholder.jpg",
-      icon: "fas fa-laptop-code",
-      main: "TechCali Solutions",
-      sub: "Desarrollo de software innovador",
-      defaultColor: "#3B82F6",
-    },
-    {
-      id: 1,
-      background: "/placeholder.jpg",
-      icon: "fas fa-leaf",
-      main: "EcoVerde Sostenible",
-      sub: "Productos ecológicos y sostenibles",
-      defaultColor: "#10B981",
-    },
-    {
-      id: 2,
-      background: "/placeholder.jpg",
-      icon: "fas fa-utensils",
-      main: "Gastronomía Valluna",
-      sub: "Restaurante de comida tradicional",
-      defaultColor: "#F59E0B",
-    },
-    {
-      id: 3,
-      background: "/placeholder.jpg",
-      icon: "fas fa-tshirt",
-      main: "Textiles del Valle",
-      sub: "Manufactura textil de alta calidad",
-      defaultColor: "#8B5CF6",
-    },
-    {
-      id: 4,
-      background: "/placeholder.jpg",
-      icon: "fas fa-truck",
-      main: "Logística Express",
-      sub: "Servicios de transporte y logística",
-      defaultColor: "#EF4444",
-    },
-  ]
+  useEffect(() => {
+    loadRecommendedCompanies()
+  }, [])
+
+  const loadRecommendedCompanies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select(`
+          id,
+          slug,
+          company_name,
+          short_description,
+          industry,
+          company_images (
+            id,
+            image_type,
+            image_url
+          )
+        `)
+        .eq('is_active', true)
+        .eq('visibility', 'public')
+        .order('views_count', { ascending: false })
+        .limit(5)
+
+      if (error) throw error
+
+      const formattedCompanies = data?.map((company: any, index: number) => {
+        const coverImage = company.company_images?.find((img: any) => img.image_type === 'cover')
+        
+        return {
+          id: company.id,
+          slug: company.slug,
+          background: coverImage?.image_url || '/placeholder.jpg',
+          icon: getIndustryIcon(company.industry),
+          main: company.company_name,
+          sub: company.short_description || company.industry || 'Empresa destacada',
+          defaultColor: getIndustryColor(company.industry, index)
+        }
+      }) || []
+
+      // Si no hay empresas, usar datos de ejemplo
+      if (formattedCompanies.length === 0) {
+        formattedCompanies.push(...getPlaceholderCompanies())
+      }
+
+      setCompanies(formattedCompanies)
+    } catch (error) {
+      console.error('Error loading companies:', error)
+      setCompanies(getPlaceholderCompanies())
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getIndustryIcon = (industry: string): string => {
+    const icons: Record<string, string> = {
+      'Tecnología': 'fas fa-laptop-code',
+      'Agricultura': 'fas fa-leaf',
+      'Gastronomía': 'fas fa-utensils',
+      'Textil': 'fas fa-tshirt',
+      'Logística': 'fas fa-truck',
+      'Educación': 'fas fa-graduation-cap',
+      'Salud': 'fas fa-heartbeat',
+      'Construcción': 'fas fa-hard-hat',
+      'Comercio': 'fas fa-store',
+      'Servicios': 'fas fa-hands-helping'
+    }
+    return icons[industry] || 'fas fa-building'
+  }
+
+  const getIndustryColor = (industry: string, index: number): string => {
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444']
+    return colors[index % colors.length]
+  }
+
+  const getPlaceholderCompanies = (): CompanyData[] => {
+    return [
+      {
+        id: '0',
+        slug: '#',
+        background: "/placeholder.jpg",
+        icon: "fas fa-laptop-code",
+        main: "TechCali Solutions",
+        sub: "Desarrollo de software innovador",
+        defaultColor: "#3B82F6",
+      },
+      {
+        id: '1',
+        slug: '#',
+        background: "/placeholder.jpg",
+        icon: "fas fa-leaf",
+        main: "EcoVerde Sostenible",
+        sub: "Productos ecológicos y sostenibles",
+        defaultColor: "#10B981",
+      },
+      {
+        id: '2',
+        slug: '#',
+        background: "/placeholder.jpg",
+        icon: "fas fa-utensils",
+        main: "Gastronomía Valluna",
+        sub: "Restaurante de comida tradicional",
+        defaultColor: "#F59E0B",
+      },
+      {
+        id: '3',
+        slug: '#',
+        background: "/placeholder.jpg",
+        icon: "fas fa-tshirt",
+        main: "Textiles del Valle",
+        sub: "Manufactura textil de alta calidad",
+        defaultColor: "#8B5CF6",
+      },
+      {
+        id: '4',
+        slug: '#',
+        background: "/placeholder.jpg",
+        icon: "fas fa-truck",
+        main: "Logística Express",
+        sub: "Servicios de transporte y logística",
+        defaultColor: "#EF4444",
+      },
+    ]
+  }
 
   const handleCompanyClick = (companyId: number) => {
     setActiveCompany(companyId)
+    
+    // Si hay slug válido, redirigir
+    if (companies[companyId] && companies[companyId].slug !== '#') {
+      window.location.href = `/${companies[companyId].slug}`
+    }
   }
 
   const styles = `
@@ -346,19 +439,38 @@ const RecommendedCompanies: React.FC = () => {
     }
   `
 
-  return (
-    <section className="py-40 lg:py-48 px-8 lg:px-16">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  if (loading) {
+    return (
+      <section className="py-20 lg:py-24 px-4 lg:px-8 bg-gradient-to-b from-white via-gray-50 to-white">
+        <div className="container px-6 mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Empresas Más Recomendadas
+            </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Descubre las empresas ganadoras del Fondo Emprender más destacadas de Cali
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </section>
+    )
+  }
 
+  return (
+    <section className="py-40 lg:py-24 px-4 lg:px-8 bg-gradient-to-b from-white via-gray-50 to-white">
       <style dangerouslySetInnerHTML={{ __html: styles }} />
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
 
       <div className="container px-6 mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-6">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
             Empresas Más Recomendadas
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Descubre las empresas ganadoras del Fondo Emprender más destacadas de Cali
           </p>
         </div>
@@ -366,53 +478,44 @@ const RecommendedCompanies: React.FC = () => {
 
       <div className="companies-container">
         <div className="companies-wrapper">
-          {companiesData.map((company) => (
+          {companies.map((company, index) => (
             <div
               key={company.id}
-              className={`company-item ${activeCompany === company.id ? "active" : ""}`}
-              style={
-                {
-                  backgroundImage: `url(${company.background})`,
-                  backgroundSize: company.id === 1 || company.id === 2 || company.id === 4 ? "cover" : undefined,
-                  "--defaultBackground": company.defaultColor,
-                } as React.CSSProperties
-              }
-              onClick={() => handleCompanyClick(company.id)}
+              className={`company-item ${activeCompany === index ? "active" : ""}`}
+              style={{
+                backgroundImage: `url(${company.background})`,
+                backgroundColor: company.defaultColor,
+              }}
+              onClick={() => handleCompanyClick(index)}
             >
               <div className="company-shadow"></div>
               <div className="company-label">
-                <div
-                  className="company-icon"
-                  style={{
-                    color: "#6B7280",
-                    textShadow: "0 1px 2px rgba(0,0,0,0.3), 0 0 8px rgba(255,255,255,0.5)",
-                    filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8))",
-                  }}
-                >
-                  <i className={company.icon}></i>
+                <div className="company-icon">
+                  <i className={company.icon} style={{ color: company.defaultColor }}></i>
                 </div>
                 <div className="company-info">
-                  <div className="company-main font-mono">{company.main}</div>
-                  <div className="company-sub font-mono">{company.sub}</div>
+                  <div className="company-main">{company.main}</div>
+                  <div className="company-sub">{company.sub}</div>
                 </div>
               </div>
             </div>
           ))}
 
           <div className="inactive-companies">
-            {companiesData.map(
-              (company) =>
-                company.id !== activeCompany && (
+            {companies.map(
+              (company, index) =>
+                index !== activeCompany && (
                   <div
                     key={company.id}
                     className="inactive-company"
                     style={{
                       backgroundImage: `url(${company.background})`,
+                      backgroundColor: company.defaultColor,
                     }}
-                    onClick={() => handleCompanyClick(company.id)}
+                    onClick={() => handleCompanyClick(index)}
                   >
                     <div className="inactive-company-inner">
-                      <i className={company.icon} style={{ color: "#6B7280" }}></i>
+                      <i className={company.icon} style={{ color: company.defaultColor }}></i>
                     </div>
                   </div>
                 ),

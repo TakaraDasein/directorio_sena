@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { User, Building2, Briefcase, ArrowRight } from "lucide-react";
@@ -17,7 +17,22 @@ interface CategoryOption {
 
 const CategorySelector: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [companyName, setCompanyName] = useState<string>("");
   const router = useRouter();
+
+  useEffect(() => {
+    // Verificar que exista el nombre de la empresa
+    const savedName = localStorage.getItem("companyName");
+    const savedSlug = localStorage.getItem("companySlug");
+    
+    if (!savedName || !savedSlug) {
+      // Si no hay nombre guardado, redirigir al paso anterior
+      router.push("/company-name");
+      return;
+    }
+    
+    setCompanyName(savedName);
+  }, [router]);
 
   const categories: CategoryOption[] = [
     {
@@ -47,10 +62,14 @@ const CategorySelector: React.FC = () => {
     if (selectedCategory) {
       // Guardar categoría seleccionada en localStorage
       localStorage.setItem("selectedCategory", selectedCategory);
-      // Omitir selección de plataformas y ir directamente a perfil creado
-      router.push("/profile-created");
+      // Ir a completar el perfil con toda la información
+      router.push("/company/create");
     }
   };
+
+  if (!companyName) {
+    return null; // O un loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
@@ -79,7 +98,7 @@ const CategorySelector: React.FC = () => {
             ¿Cuál es tu objetivo principal en el directorio SENA?
           </h1>
           <p className="text-gray-600">
-            Esto nos ayuda a personalizar tu perfil profesional.
+            Perfil para: <span className="font-semibold text-primary">{companyName}</span>
           </p>
         </div>
 

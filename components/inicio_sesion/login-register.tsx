@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Users, Award } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, GraduationCap, Users, Award, Loader2 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface LoginRegisterProps {
   onSuccess: (userData: { name: string; email: string }) => void;
@@ -18,18 +20,17 @@ interface LoginRegisterProps {
 const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
-  
-  // Credenciales por defecto para desarrollo
-  const DEFAULT_CREDENTIALS = {
-    email: "admin@sena.edu.co",
-    password: "admin123"
-  };
+  const supabase = createClient();
   
   const [loginData, setLoginData] = useState({
-    email: DEFAULT_CREDENTIALS.email,
-    password: DEFAULT_CREDENTIALS.password
+    email: "",
+    password: ""
   });
+  
   const [registerData, setRegisterData] = useState({
     name: "",
     email: "",
@@ -37,30 +38,110 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
     confirmPassword: ""
   });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
     
-    // Validación de credenciales por defecto para desarrollo
-    if (loginData.email === DEFAULT_CREDENTIALS.email && 
-        loginData.password === DEFAULT_CREDENTIALS.password) {
-      // Redirigir a la página de configuración de usuario
-      router.push("/userinfo");
-    } else {
-      alert("Credenciales incorrectas. Use: admin@sena.edu.co / admin123");
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Verificar si el usuario ya tiene una empresa registrada
+        const { data: companies, error: companyError } = await supabase
+          .from('companies')
+          .select('id, slug')
+          .eq('user_id', data.user.id)
+          .limit(1);
+
+        if (companyError) throw companyError;
+
+        if (companies && companies.length > 0) {
+          // Usuario ya tiene empresa, redirigir al panel de administración
+          router.push('/admin');
+        } else {
+          // Usuario nuevo, redirigir al flujo de configuración (nombre de empresa primero)
+          router.push("/company-name");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error en login:", error);
+      setError(error.message || "Error al iniciar sesión. Verifica tus credenciales.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+    
+    // Validaciones
     if (registerData.password !== registerData.confirmPassword) {
-      alert("Las contraseñas no coinciden");
+      setError("Las contraseñas no coinciden");
+      setIsLoading(false);
       return;
     }
-    // Simulación de registro exitoso
-    onSuccess({
-      name: registerData.name,
-      email: registerData.email
-    });
+
+    if (registerData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: registerData.email,
+        password: registerData.password,
+        options: {
+          data: {
+            full_name: registerData.name,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Verificar si necesita confirmación de email
+        if (data.user.identities && data.user.identities.length === 0) {
+          setError("Este correo electrónico ya está registrado. Por favor inicia sesión.");
+          setIsLoading(false);
+          return;
+        }
+
+        setSuccessMessage(
+          "¡Cuenta creada exitosamente! Revisa tu correo electrónico para confirmar tu cuenta."
+        );
+        
+        // Limpiar formulario
+        setRegisterData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: ""
+        });
+        
+        // Opcional: cambiar a tab de login después de 3 segundos
+        setTimeout(() => {
+          const loginTab = document.querySelector('[value="login"]') as HTMLButtonElement;
+          loginTab?.click();
+        }, 3000);
+      }
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      setError(error.message || "Error al crear la cuenta. Intenta nuevamente.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -147,6 +228,20 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
           {/* Form Container */}
           <Card className="bg-white border-gray-200 shadow-lg">
             <CardContent className="p-6">
+              {/* Error Alert */}
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {/* Success Alert */}
+              {successMessage && (
+                <Alert className="mb-4 bg-green-50 border-green-200 text-green-800">
+                  <AlertDescription>{successMessage}</AlertDescription>
+                </Alert>
+              )}
+              
               <Tabs defaultValue="login" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2 bg-gray-100">
                   <TabsTrigger 
@@ -211,17 +306,22 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
                     <Button 
                       type="submit" 
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      disabled={isLoading}
                     >
-                      Iniciar Sesión
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Iniciando sesión...
+                        </>
+                      ) : (
+                        "Iniciar Sesión"
+                      )}
                     </Button>
                     
-                    {/* Nota informativa para desarrollo */}
-                    <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                      <p className="text-xs text-gray-700 text-center">
-                        <strong>Credenciales de desarrollo:</strong><br />
-                        Email: admin@sena.edu.co<br />
-                        Contraseña: admin123
-                      </p>
+                    <div className="text-center mt-4">
+                      <a href="#" className="text-sm text-primary hover:underline">
+                        ¿Olvidaste tu contraseña?
+                      </a>
                     </div>
                   </form>
                 </TabsContent>
@@ -317,9 +417,28 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
                     <Button 
                       type="submit" 
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      disabled={isLoading}
                     >
-                      Crear Cuenta
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creando cuenta...
+                        </>
+                      ) : (
+                        "Crear Cuenta"
+                      )}
                     </Button>
+                    
+                    <p className="text-xs text-center text-gray-600 mt-4">
+                      Al registrarte, aceptas nuestros{" "}
+                      <a href="#" className="text-primary hover:underline">
+                        Términos de Servicio
+                      </a>{" "}
+                      y{" "}
+                      <a href="#" className="text-primary hover:underline">
+                        Política de Privacidad
+                      </a>
+                    </p>
                   </form>
                 </TabsContent>
               </Tabs>
