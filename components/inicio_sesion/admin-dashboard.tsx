@@ -234,25 +234,30 @@ export function AdminDashboard() {
           template: company.theme || 'default'
         });
 
-        // Convertir social_links a formato de links
+        // Cargar enlaces sociales desde la tabla social_links
+        const { data: socialLinksData, error: socialLinksError } = await supabase
+          .from('social_links')
+          .select('*')
+          .eq('company_id', company.id)
+          .order('display_order', { ascending: true });
+
         const socialLinks: LinkItem[] = [];
-        if (company.social_links) {
-          Object.entries(company.social_links).forEach(([platform, url], index) => {
-            if (url && typeof url === 'string' && url.trim()) {
-              socialLinks.push({
-                id: `social-${platform}`,
-                title: getPlatformName(platform),
-                url: url as string,
-                clicks: Math.floor(Math.random() * 100),
-                isActive: true,
-                type: "platform",
-                platformId: platform
-              });
-            }
+        
+        if (!socialLinksError && socialLinksData) {
+          socialLinksData.forEach((link) => {
+            socialLinks.push({
+              id: link.id,
+              title: getPlatformName(link.platform),
+              url: link.url,
+              clicks: Math.floor(Math.random() * 100),
+              isActive: true,
+              type: "platform",
+              platformId: link.platform
+            });
           });
         }
 
-        // Agregar enlaces de contacto
+        // Agregar enlaces de contacto desde la empresa
         if (company.website) {
           socialLinks.push({
             id: 'website',
@@ -746,10 +751,27 @@ export function AdminDashboard() {
     ));
   };
 
-  const deleteLink = (linkId: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este enlace?')) {
-      setLinks(prev => prev.filter(link => link.id !== linkId));
+  const deleteLink = async (linkId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este enlace?')) return;
+    
+    // Si es un link de tipo platform (red social), eliminar de la tabla social_links
+    const link = links.find(l => l.id === linkId);
+    if (link && link.type === "platform" && link.id !== 'whatsapp') {
+      try {
+        const { error } = await supabase
+          .from('social_links')
+          .delete()
+          .eq('id', linkId);
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error al eliminar enlace:', error);
+        alert('Error al eliminar el enlace');
+        return;
+      }
     }
+    
+    setLinks(prev => prev.filter(link => link.id !== linkId));
   };
 
   const startEditing = (link: LinkItem) => {
@@ -762,7 +784,28 @@ export function AdminDashboard() {
     setEditForm({ title: "", url: "" });
   };
 
-  const saveEdit = (linkId: string) => {
+  const saveEdit = async (linkId: string) => {
+    const link = links.find(l => l.id === linkId);
+    
+    // Si es un link de tipo platform (red social), actualizar en la tabla social_links
+    if (link && link.type === "platform" && link.id !== 'whatsapp' && companyData) {
+      try {
+        const { error } = await supabase
+          .from('social_links')
+          .update({ 
+            url: editForm.url,
+            platform: link.platformId || link.title.toLowerCase()
+          })
+          .eq('id', linkId);
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error al actualizar enlace:', error);
+        alert('Error al actualizar el enlace');
+        return;
+      }
+    }
+    
     setLinks(prev => prev.map(link => 
       link.id === linkId 
         ? { ...link, title: editForm.title, url: editForm.url } 
