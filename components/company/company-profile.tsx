@@ -96,6 +96,10 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   const [businessHours, setBusinessHours] = useState<any[]>([])
   const [isLoadingHours, setIsLoadingHours] = useState(true)
   
+  // Estados para redes sociales
+  const [socialLinks, setSocialLinks] = useState<any[]>([])
+  const [isLoadingSocialLinks, setIsLoadingSocialLinks] = useState(true)
+  
   // Verificar si el usuario es dueño del perfil
   useEffect(() => {
     const checkOwnership = async () => {
@@ -191,6 +195,7 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   useEffect(() => {
     loadReviews()
     loadBusinessHours()
+    loadSocialLinks()
   }, [company.id])
   
   const loadReviews = async () => {
@@ -233,6 +238,27 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
       console.error('Error al cargar horarios:', error)
     } finally {
       setIsLoadingHours(false)
+    }
+  }
+  
+  const loadSocialLinks = async () => {
+    try {
+      setIsLoadingSocialLinks(true)
+      const supabase = createClient()
+      
+      const { data, error } = await supabase
+        .from('social_links')
+        .select('*')
+        .eq('company_id', company.id)
+        .order('display_order', { ascending: true })
+      
+      if (error) throw error
+      
+      setSocialLinks(data || [])
+    } catch (error) {
+      console.error('Error al cargar enlaces sociales:', error)
+    } finally {
+      setIsLoadingSocialLinks(false)
     }
   }
   
@@ -611,6 +637,25 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
                   </a>
                 </Button>
               )}
+              
+              {/* Social Links */}
+              {socialLinks.map((link) => {
+                const Icon = socialIcons[link.platform] || Globe
+                return (
+                  <Button 
+                    key={link.id}
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 font-medium"
+                  >
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                      <Icon className="h-4 w-4" />
+                      {link.platform.charAt(0).toUpperCase() + link.platform.slice(1)}
+                    </a>
+                  </Button>
+                )
+              })}
             </div>
 
             {/* Description - Card minimalista */}
