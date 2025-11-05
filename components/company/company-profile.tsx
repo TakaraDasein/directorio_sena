@@ -15,6 +15,7 @@ import {
   Globe,
   Calendar,
   Users,
+  User,
   Briefcase,
   Eye,
   Share2,
@@ -332,9 +333,9 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
       >
         <div className="container px-6 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <Logo className="h-8 w-auto text-white" />
-          </Link>
+          <div className="flex-shrink-0 cursor-pointer" onClick={() => window.location.href = '/'}>
+            <Logo asLink={false} size="sm" />
+          </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
@@ -350,12 +351,12 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
             >
               Blogs
             </Link>
-            <Link href="/auth">
+            <Link href={isOwner ? "/admin" : "/auth"}>
               <Button 
                 variant="outline" 
                 className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white hover:border-white/30"
               >
-                Unirme
+                {isOwner ? "Ir al Admin" : "Unirme"}
               </Button>
             </Link>
           </div>
@@ -387,12 +388,12 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
             >
               Blogs
             </Link>
-            <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
+            <Link href={isOwner ? "/admin" : "/auth"} onClick={() => setIsMenuOpen(false)}>
               <Button 
                 variant="outline" 
                 className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white hover:border-white/30"
               >
-                Unirme
+                {isOwner ? "Ir al Admin" : "Unirme"}
               </Button>
             </Link>
           </div>
@@ -501,17 +502,6 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
                   
                   {/* Action Buttons - Estilo Vercel */}
                   <div className="flex gap-2 shrink-0">
-                    {isOwner && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => window.location.href = '/admin'}
-                        className="custom-primary-bg border-0 hover:opacity-90 text-white"
-                      >
-                        <Building2 className="h-4 w-4 mr-1.5" />
-                        Ir al Admin
-                      </Button>
-                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -631,30 +621,6 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
                   <p className="text-gray-700 leading-relaxed whitespace-pre-line">
                     {company.description}
                   </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Entrepreneur Section - Si existe información del emprendedor */}
-            {((company as any).entrepreneur_name || (company as any).entrepreneur_image_url) && (
-              <Card className="border border-gray-200 bg-gradient-to-br from-gray-50 to-white">
-                <CardContent className="pt-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">Conoce al Emprendedor</h2>
-                  <div className="flex items-center gap-6">
-                    {(company as any).entrepreneur_image_url && (
-                      <img 
-                        src={(company as any).entrepreneur_image_url} 
-                        alt={(company as any).entrepreneur_name || 'Emprendedor'}
-                        className="w-24 h-24 md:w-28 md:h-28 rounded-full object-cover border-4 border-white shadow-lg"
-                      />
-                    )}
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                        {(company as any).entrepreneur_name || 'Emprendedor'}
-                      </h3>
-                      <p className="text-gray-600 font-medium">Empresario</p>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             )}
@@ -1065,29 +1031,31 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
 
           {/* Sidebar - 1/3 width */}
           <div className="space-y-6">
-            {/* Owner/Contact Person Card */}
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                  {logoImage ? (
-                    <Image
-                      src={logoImage.image_url}
-                      alt={logoImage.alt_text || company.company_name}
-                      width={128}
-                      height={128}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <Building2 className="h-16 w-16 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                
-                <h3 className="text-xl font-bold mb-1">{company.company_name}</h3>
-                <p className="text-gray-600 mb-4">{categoryLabels[company.category]}</p>
-              </CardContent>
-            </Card>
+            {/* Entrepreneur Card */}
+            {((company as any).entrepreneur_name || (company as any).entrepreneur_image_url) && (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                    {(company as any).entrepreneur_image_url ? (
+                      <Image
+                        src={(company as any).entrepreneur_image_url}
+                        alt={(company as any).entrepreneur_name || 'Emprendedor'}
+                        width={128}
+                        height={128}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <User className="h-16 w-16 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <h3 className="text-xl font-bold mb-1">{(company as any).entrepreneur_name || 'Emprendedor'}</h3>
+                  <p className="text-gray-600">Empresario</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Map Card */}
             <Card>

@@ -109,6 +109,13 @@ export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, 
   const checkSlugAvailability = async (slugToCheck: string) => {
     setCheckingSlug(true)
     try {
+      // En modo edición, si el slug es el mismo que el original, marcarlo como disponible
+      if (isEditMode && slugToCheck === formData.slug) {
+        setSlugAvailable(true)
+        setCheckingSlug(false)
+        return
+      }
+
       const { data, error } = await supabase
         .rpc('check_slug_availability', { slug_to_check: slugToCheck })
 
@@ -125,8 +132,8 @@ export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // En modo edición, no validar slug disponibilidad
-    if (!isEditMode && !slugAvailable) {
+    // Validar que el slug esté disponible
+    if (!slugAvailable) {
       alert("Por favor, elige un slug disponible")
       return
     }
@@ -215,31 +222,28 @@ export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, 
               pattern="[a-z0-9-]+"
               minLength={3}
               maxLength={80}
-              disabled={nameIsLocked || isEditMode}
             />
-            {!isEditMode && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {getSlugStatusIcon()}
-              </div>
-            )}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              {getSlugStatusIcon()}
+            </div>
           </div>
         </div>
         
-        {slugError && !isEditMode && (
+        {slugError && (
           <p className="text-sm text-red-600 flex items-center gap-2">
             <XCircle className="h-4 w-4" />
             {slugError}
           </p>
         )}
         
-        {slugAvailable === true && !isEditMode && (
+        {slugAvailable === true && (
           <p className="text-sm text-green-700 flex items-center gap-2 bg-green-50 px-3 py-2 rounded-md">
             <CheckCircle2 className="h-4 w-4" />
             ¡Este slug está disponible!
           </p>
         )}
         
-        {slugAvailable === false && !slugError && !isEditMode && (
+        {slugAvailable === false && !slugError && (
           <p className="text-sm text-red-600 flex items-center gap-2 bg-red-50 px-3 py-2 rounded-md">
             <XCircle className="h-4 w-4" />
             Este slug ya está en uso, intenta con otro
@@ -247,13 +251,13 @@ export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, 
         )}
         
         <p className="text-sm text-gray-600">
-          {isEditMode 
-            ? "La URL fue configurada al crear tu empresa y no se puede modificar" 
-            : nameIsLocked 
-              ? "Esta URL fue configurada previamente" 
-              : `Esta será tu URL única: `}
-          <span className="font-mono text-primary font-semibold">directoriosena.com/{slug || 'tu-empresa'}</span>
+          Esta será tu URL única: <span className="font-mono text-primary font-semibold">directoriosena.com/{slug || 'tu-empresa'}</span>
         </p>
+        {isEditMode && (
+          <p className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-md">
+            ⚠️ Cambiar la URL puede afectar enlaces existentes. Asegúrate de actualizar cualquier referencia externa.
+          </p>
+        )}
       </div>
 
       {/* Category */}
@@ -335,7 +339,7 @@ export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, 
         <Button
           type="submit"
           size="lg"
-          disabled={isEditMode ? false : (!slugAvailable || checkingSlug)}
+          disabled={!slugAvailable || checkingSlug}
           className="min-w-[200px] bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white font-bold shadow-md hover:shadow-lg transition-all"
         >
           Continuar
