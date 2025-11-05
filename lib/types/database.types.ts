@@ -438,3 +438,51 @@ export const CATEGORY_OPTIONS = [
   { value: 'empresa', label: 'Empresa', description: 'Empresa o negocio' },
   { value: 'instructor', label: 'Instructor SENA', description: 'Instructor o formador del SENA' },
 ] as const
+
+// Blog types
+export interface Blog {
+  id: string
+  company_id: string
+  title: string
+  slug: string
+  excerpt: string | null
+  author: string
+  cover_image: string | null
+  content_path: string
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  is_published: boolean
+  views: number
+}
+
+export interface BlogInsert {
+  company_id: string
+  title: string
+  slug: string
+  excerpt?: string | null
+  author: string
+  cover_image?: string | null
+  content_path: string
+  published_at?: string | null
+  is_published?: boolean
+}
+
+export interface BlogUpdate {
+  title?: string
+  slug?: string
+  excerpt?: string | null
+  author?: string
+  cover_image?: string | null
+  content_path?: string
+  published_at?: string | null
+  is_published?: boolean
+}
+
+export interface BlogWithCompany extends Blog {
+  company: {
+    company_name: string
+    slug: string
+    category: string
+  }
+}

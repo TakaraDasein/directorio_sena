@@ -7,7 +7,7 @@ import { useState } from "react"
 import Link from "next/link"
 
 const MENU_ITEMS = [
-  { label: "Blogs", href: "#" }, 
+  { label: "Blogs", href: "/blog" }, 
 ] as const
 
 interface NavMenuItemsProps {

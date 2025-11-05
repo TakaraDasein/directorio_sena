@@ -34,7 +34,8 @@ import {
   Check,
   XCircle as XCircleIcon,
   Clock,
-  LogOut
+  LogOut,
+  FileText
 } from "lucide-react";
 
 interface LinkItem {
@@ -138,6 +139,22 @@ export function AdminDashboard() {
   const [businessHours, setBusinessHours] = useState<any[]>([]);
   const [isLoadingHours, setIsLoadingHours] = useState(false);
   
+  // Estados para blogs
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [isLoadingBlogs, setIsLoadingBlogs] = useState(false);
+  const [showBlogModal, setShowBlogModal] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<any | null>(null);
+  const [blogForm, setBlogForm] = useState({
+    title: "",
+    slug: "",
+    excerpt: "",
+    author: "",
+    cover_image: "",
+    content: "",
+    is_published: false
+  });
+  const [uploadingBlogImage, setUploadingBlogImage] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -147,6 +164,7 @@ export function AdminDashboard() {
     { id: "shop", label: "Tienda", icon: Store },
     { id: "images", label: "Imágenes", icon: ImageIcon },
     { id: "hours", label: "Horarios", icon: Clock },
+    { id: "blogs", label: "Blogs", icon: FileText },
     { id: "reviews", label: "Opiniones", icon: MessageSquare, badge: pendingReviewsCount > 0 ? String(pendingReviewsCount) : undefined },
     { id: "design", label: "Diseño", icon: Palette }
   ];
@@ -159,6 +177,7 @@ export function AdminDashboard() {
     if (companyData?.id) {
       loadReviews();
       loadBusinessHours();
+      loadBlogs();
     }
   }, [companyData?.id]);
 
@@ -366,6 +385,199 @@ export function AdminDashboard() {
       console.error('Error al cargar horarios:', error);
     } finally {
       setIsLoadingHours(false);
+    }
+  };
+
+  const loadBlogs = async () => {
+    if (!companyData?.id) return;
+    
+    try {
+      setIsLoadingBlogs(true);
+      
+      const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('company_id', companyData.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error al cargar blogs:', error);
+        return;
+      }
+      
+      setBlogs(data || []);
+      
+    } catch (error) {
+      console.error('Error al cargar blogs:', error);
+    } finally {
+      setIsLoadingBlogs(false);
+    }
+  };
+
+  const generateSlug = (title: string): string => {
+    return title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+      .replace(/\s+/g, '-') // Replace spaces with -
+      .replace(/-+/g, '-') // Replace multiple - with single -
+      .trim();
+  };
+
+  const openBlogModal = (blog?: any) => {
+    if (blog) {
+      setEditingBlog(blog);
+      setBlogForm({
+        title: blog.title,
+        slug: blog.slug,
+        excerpt: blog.excerpt || "",
+        author: blog.author,
+        cover_image: blog.cover_image || "",
+        content: "", // Cargaremos el contenido del archivo markdown
+        is_published: blog.is_published
+      });
+    } else {
+      setEditingBlog(null);
+      setBlogForm({
+        title: "",
+        slug: "",
+        excerpt: "",
+        author: companyData?.company_name || "",
+        cover_image: "",
+        content: "",
+        is_published: false
+      });
+    }
+    setShowBlogModal(true);
+  };
+
+  const saveBlog = async () => {
+    if (!companyData?.id || !blogForm.title || !blogForm.content) {
+      alert('Por favor completa el título y contenido del blog');
+      return;
+    }
+
+    try {
+      const slug = blogForm.slug || generateSlug(blogForm.title);
+      const fileName = `${slug}-${Date.now()}.md`;
+      const contentPath = `${companyData.id}/${fileName}`;
+
+      // Guardar el contenido markdown en storage
+      const { error: storageError } = await supabase.storage
+        .from('blog-content')
+        .upload(contentPath, new Blob([blogForm.content], { type: 'text/markdown' }));
+
+      if (storageError) {
+        console.error('Error al guardar contenido:', storageError);
+        alert('Error al guardar el contenido del blog');
+        return;
+      }
+
+      // Guardar metadatos en la tabla
+      const blogData = {
+        company_id: companyData.id,
+        title: blogForm.title,
+        slug: slug,
+        excerpt: blogForm.excerpt,
+        author: blogForm.author,
+        cover_image: blogForm.cover_image,
+        content_path: contentPath,
+        is_published: blogForm.is_published,
+        published_at: blogForm.is_published ? new Date().toISOString() : null
+      };
+
+      if (editingBlog) {
+        const { error } = await supabase
+          .from('blogs')
+          .update(blogData)
+          .eq('id', editingBlog.id);
+
+        if (error) {
+          console.error('Error al actualizar blog:', error);
+          alert('Error al actualizar el blog');
+          return;
+        }
+      } else {
+        const { error } = await supabase
+          .from('blogs')
+          .insert([blogData]);
+
+        if (error) {
+          console.error('Error al crear blog:', error);
+          alert('Error al crear el blog');
+          return;
+        }
+      }
+
+      setShowBlogModal(false);
+      loadBlogs();
+      alert('Blog guardado exitosamente');
+      
+    } catch (error) {
+      console.error('Error al guardar blog:', error);
+      alert('Error al guardar el blog');
+    }
+  };
+
+  const deleteBlog = async (blogId: string, contentPath: string) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este blog?')) return;
+
+    try {
+      // Eliminar archivo de storage
+      await supabase.storage
+        .from('blog-content')
+        .remove([contentPath]);
+
+      // Eliminar de la tabla
+      const { error } = await supabase
+        .from('blogs')
+        .delete()
+        .eq('id', blogId);
+
+      if (error) {
+        console.error('Error al eliminar blog:', error);
+        alert('Error al eliminar el blog');
+        return;
+      }
+
+      loadBlogs();
+      alert('Blog eliminado exitosamente');
+      
+    } catch (error) {
+      console.error('Error al eliminar blog:', error);
+      alert('Error al eliminar el blog');
+    }
+  };
+
+  const uploadBlogImage = async (file: File) => {
+    if (!companyData?.id) return null;
+
+    try {
+      setUploadingBlogImage(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${companyData.id}/blog-covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('company-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Error al subir imagen:', uploadError);
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('company-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      return null;
+    } finally {
+      setUploadingBlogImage(false);
     }
   };
 
@@ -2114,6 +2326,292 @@ export function AdminDashboard() {
     );
   };
 
+  const renderBlogsSection = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Blogs</h1>
+          <p className="text-gray-600 mt-2 text-base">Comparte historias e inspiración con tu audiencia</p>
+        </div>
+        <button
+          onClick={() => openBlogModal()}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-md"
+        >
+          <Plus className="w-5 h-5" />
+          Nuevo Blog
+        </button>
+      </div>
+
+      {/* Lista de Blogs */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        {isLoadingBlogs ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          </div>
+        ) : blogs.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg font-medium mb-2">No tienes blogs aún</p>
+            <p className="text-gray-400 mb-6">Empieza a compartir tu historia con tu audiencia</p>
+            <button
+              onClick={() => openBlogModal()}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Crear mi primer blog
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {blogs.map((blog) => (
+              <div
+                key={blog.id}
+                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">{blog.title}</h3>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        blog.is_published 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                        {blog.is_published ? 'Publicado' : 'Borrador'}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-2">{blog.excerpt || 'Sin extracto'}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>Por {blog.author}</span>
+                      <span>•</span>
+                      <span>{new Date(blog.created_at).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span>{blog.views} vistas</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => window.open(`/blog/${blog.slug}`, '_blank')}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Ver blog"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => openBlogModal(blog)}
+                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Editar"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteBlog(blog.id, blog.content_path)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Tips */}
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-white rounded-lg shadow-sm">
+            <FileText className="w-6 h-6 text-purple-600" />
+          </div>
+          <div>
+            <h4 className="font-bold text-purple-900 mb-2">Consejos para tu blog</h4>
+            <ul className="space-y-1 text-sm text-purple-800">
+              <li>• Usa títulos atractivos que capturen la atención</li>
+              <li>• Escribe contenido auténtico que refleje tu experiencia</li>
+              <li>• Agrega imágenes de portada llamativas</li>
+              <li>• Publica regularmente para mantener el interés</li>
+              <li>• Los blogs publicados aparecen en tu perfil público</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal de Blog */}
+      {showBlogModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">
+                {editingBlog ? 'Editar Blog' : 'Nuevo Blog'}
+              </h3>
+              <button
+                onClick={() => setShowBlogModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Título */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Título *
+                </label>
+                <input
+                  type="text"
+                  value={blogForm.title}
+                  onChange={(e) => {
+                    setBlogForm({ ...blogForm, title: e.target.value });
+                    if (!editingBlog) {
+                      setBlogForm({ ...blogForm, title: e.target.value, slug: generateSlug(e.target.value) });
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+                  placeholder="Título de tu blog"
+                />
+              </div>
+
+              {/* Slug */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL (slug)
+                </label>
+                <input
+                  type="text"
+                  value={blogForm.slug}
+                  onChange={(e) => setBlogForm({ ...blogForm, slug: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+                  placeholder="url-del-blog"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Tu blog estará en: {window.location.origin}/blog/{blogForm.slug || 'tu-slug'}
+                </p>
+              </div>
+
+              {/* Autor */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Autor *
+                </label>
+                <input
+                  type="text"
+                  value={blogForm.author}
+                  onChange={(e) => setBlogForm({ ...blogForm, author: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+                  placeholder="Nombre del autor"
+                />
+              </div>
+
+              {/* Extracto */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Extracto
+                </label>
+                <textarea
+                  value={blogForm.excerpt}
+                  onChange={(e) => setBlogForm({ ...blogForm, excerpt: e.target.value })}
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
+                  placeholder="Breve descripción del blog (aparece en las vistas previas)"
+                />
+              </div>
+
+              {/* Imagen de portada */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Imagen de portada
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={blogForm.cover_image}
+                    onChange={(e) => setBlogForm({ ...blogForm, cover_image: e.target.value })}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
+                    placeholder="URL de la imagen"
+                  />
+                  <label className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer flex items-center gap-2 text-gray-700">
+                    <Upload className="w-4 h-4" />
+                    {uploadingBlogImage ? 'Subiendo...' : 'Subir'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingBlogImage}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const url = await uploadBlogImage(file);
+                          if (url) setBlogForm({ ...blogForm, cover_image: url });
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {blogForm.cover_image && (
+                  <img
+                    src={blogForm.cover_image}
+                    alt="Preview"
+                    className="mt-3 w-full h-48 object-cover rounded-lg"
+                  />
+                )}
+              </div>
+
+              {/* Contenido en Markdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Contenido (Markdown) *
+                </label>
+                <textarea
+                  value={blogForm.content}
+                  onChange={(e) => setBlogForm({ ...blogForm, content: e.target.value })}
+                  rows={15}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none font-mono text-sm text-gray-900 placeholder:text-gray-400"
+                  placeholder="Escribe tu contenido en formato Markdown..."
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Puedes usar Markdown: **negrita**, *cursiva*, # títulos, - listas, etc.
+                </p>
+              </div>
+
+              {/* Publicar */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_published"
+                  checked={blogForm.is_published}
+                  onChange={(e) => setBlogForm({ ...blogForm, is_published: e.target.checked })}
+                  className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <label htmlFor="is_published" className="text-sm font-medium text-gray-700">
+                  Publicar inmediatamente
+                </label>
+              </div>
+            </div>
+
+            <div className="border-t px-6 py-4 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowBlogModal(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveBlog}
+                className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all shadow-md flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const renderDesignSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -2347,6 +2845,8 @@ export function AdminDashboard() {
         return renderImagesSection();
       case "hours":
         return renderHoursSection();
+      case "blogs":
+        return renderBlogsSection();
       case "reviews":
         return renderReviewsSection();
       case "design":
