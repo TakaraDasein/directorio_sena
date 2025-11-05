@@ -36,6 +36,7 @@ import type { CompanyWithRelations } from "@/lib/types/database.types"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { getThemeById, applyTheme } from "@/lib/themes"
+import { createClient } from "@/lib/supabase/client"
 
 interface CompanyProfileProps {
   company: CompanyWithRelations
@@ -70,6 +71,19 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageError, setImageError] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
+  
+  // Estados para review/calificación
+  const [rating, setRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [reviewForm, setReviewForm] = useState({
+    comment: '',
+    title: '',
+    name: '',
+    email: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true)
   
   // Obtener color personalizado
   const primaryColor = (company as any).custom_color || company.theme_color || '#2F4D2A';
@@ -151,6 +165,33 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
     };
   }, [primaryColor])
   
+  // Cargar reviews de la empresa
+  useEffect(() => {
+    loadReviews()
+  }, [company.id])
+  
+  const loadReviews = async () => {
+    try {
+      setIsLoadingReviews(true)
+      const supabase = createClient()
+      
+      const { data, error } = await supabase
+        .from('company_reviews')
+        .select('*')
+        .eq('company_id', company.id)
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      
+      setReviews(data || [])
+    } catch (error) {
+      console.error('Error al cargar reviews:', error)
+    } finally {
+      setIsLoadingReviews(false)
+    }
+  }
+  
   // Obtener imágenes por tipo
   const logoImage = company.company_images?.find(img => img.image_type === 'logo')
   const coverImage = company.company_images?.find(img => img.image_type === 'cover')
@@ -181,6 +222,61 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
     } else {
       navigator.clipboard.writeText(window.location.href)
       alert('¡URL copiada al portapapeles!')
+    }
+  }
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validación
+    if (!reviewForm.comment.trim() || !reviewForm.title.trim() || !reviewForm.name.trim() || !reviewForm.email.trim()) {
+      alert('Por favor completa todos los campos obligatorios')
+      return
+    }
+    
+    if (rating === 0) {
+      alert('Por favor selecciona una calificación')
+      return
+    }
+    
+    setIsSubmitting(true)
+    
+    try {
+      const supabase = createClient()
+      
+      // Guardar review en Supabase
+      const { data, error } = await supabase
+        .from('company_reviews')
+        .insert({
+          company_id: company.id,
+          rating: rating,
+          title: reviewForm.title,
+          comment: reviewForm.comment,
+          author_name: reviewForm.name,
+          author_email: reviewForm.email,
+          is_approved: false // Requiere aprobación del admin
+        })
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      alert('¡Gracias por tu opinión! Tu comentario será revisado y publicado pronto.')
+      
+      // Limpiar formulario
+      setReviewForm({
+        comment: '',
+        title: '',
+        name: '',
+        email: ''
+      })
+      setRating(0)
+      
+    } catch (error) {
+      console.error('Error al enviar review:', error)
+      alert('Hubo un error al enviar tu opinión. Intenta nuevamente.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -503,54 +599,179 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
               <CardContent className="pt-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Califica y escribe un comentario</h3>
                 
-                <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
+                <form onSubmit={handleSubmitReview} className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
                   <p className="text-gray-900 font-semibold mb-4">Tu Opinión</p>
+                  
+                  {/* Textarea para comentario */}
                   <textarea
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
                     placeholder="Cuente su experiencia o deje un consejo para otros"
                     className="w-full min-h-[120px] p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:custom-primary-ring bg-white text-gray-900"
+                    required
                   />
                   
+                  {/* Sistema de calificación con estrellas */}
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 mb-2">Su calificación general:</p>
                     <div className="flex gap-1 mb-4">
                       {[1, 2, 3, 4, 5].map((star) => (
-                        <Star key={star} className="h-8 w-8 text-gray-300 hover:custom-primary-text cursor-pointer transition-colors" />
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          className="transition-all duration-200 hover:scale-110"
+                        >
+                          <Star 
+                            className={`h-8 w-8 cursor-pointer transition-colors ${
+                              star <= (hoverRating || rating)
+                                ? 'fill-current custom-primary-text'
+                                : 'text-gray-300'
+                            }`}
+                            style={{
+                              color: star <= (hoverRating || rating) ? primaryColor : undefined
+                            }}
+                          />
+                        </button>
                       ))}
+                      {rating > 0 && (
+                        <span className="ml-3 text-sm text-gray-600 self-center">
+                          {rating} de 5 estrellas
+                        </span>
+                      )}
                     </div>
                   </div>
 
+                  {/* Campos del formulario */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">Título de su opinión *</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Título de su opinión *
+                      </label>
                       <input
                         type="text"
+                        value={reviewForm.title}
+                        onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
                         placeholder="Resuma su opinión"
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:custom-primary-ring bg-white text-gray-900"
+                        required
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">Nombre *</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Nombre *
+                      </label>
                       <input
                         type="text"
+                        value={reviewForm.name}
+                        onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
                         placeholder="Tu nombre"
-                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:custom-primary-ring bg-white text-gray-900"
+                        required
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm mb-2">Correo electrónico *</label>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                        Correo electrónico *
+                      </label>
                       <input
                         type="email"
+                        value={reviewForm.email}
+                        onChange={(e) => setReviewForm({ ...reviewForm, email: e.target.value })}
                         placeholder="tu@email.com"
-                        className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:custom-primary-ring bg-white text-gray-900"
+                        required
                       />
                     </div>
                   </div>
 
-                  <Button className="sena-btn-primary">
-                    Envíe su opinión
+                  {/* Botón de envío */}
+                  <Button 
+                    type="submit"
+                    disabled={isSubmitting || rating === 0}
+                    className="sena-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                        Enviando...
+                      </>
+                    ) : (
+                      'Envíe su opinión'
+                    )}
                   </Button>
+                </form>
+                
+                {/* Opiniones existentes */}
+                <div className="mt-8">
+                  <h4 className="text-lg font-bold text-gray-900 mb-4">
+                    Opiniones de clientes ({reviews.length})
+                  </h4>
+                  
+                  {isLoadingReviews ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-gray-600 rounded-full animate-spin"></div>
+                      <p className="text-gray-600 mt-2">Cargando opiniones...</p>
+                    </div>
+                  ) : reviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {reviews.map((review) => (
+                        <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h5 className="font-bold text-gray-900 text-lg mb-1">{review.title}</h5>
+                              <div className="flex items-center gap-2 mb-2">
+                                {/* Estrellas del review */}
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                      key={star}
+                                      className={`h-4 w-4 ${
+                                        star <= review.rating
+                                          ? 'fill-current'
+                                          : 'text-gray-300'
+                                      }`}
+                                      style={{
+                                        color: star <= review.rating ? primaryColor : undefined
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-sm text-gray-600">
+                                  {review.rating} de 5
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {new Date(review.created_at).toLocaleDateString('es-CO', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          
+                          <p className="text-gray-700 leading-relaxed mb-3">
+                            {review.comment}
+                          </p>
+                          
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="font-medium">{review.author_name}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600 font-medium mb-1">Aún no hay opiniones</p>
+                      <p className="text-sm text-gray-500">Sé el primero en compartir tu experiencia</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -657,9 +878,20 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
                             <Button 
                               size="sm" 
                               className="sena-btn-primary flex items-center gap-2"
+                              onClick={() => {
+                                const whatsappNumber = company.whatsapp || '';
+                                if (!whatsappNumber) {
+                                  alert('El vendedor no ha configurado su WhatsApp');
+                                  return;
+                                }
+                                
+                                const message = `Hola! Estoy interesado en:\n\n*${product.name}*\nPrecio: $${product.price.toLocaleString('es-CO')}\n${product.description ? `\n${product.description}\n` : ''}\nVisto en: ${window.location.href}`;
+                                const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+                                window.open(whatsappUrl, '_blank');
+                              }}
                             >
                               <ShoppingCart className="w-4 h-4" />
-                              Ver
+                              Comprar
                             </Button>
                           </div>
                         </div>
@@ -708,18 +940,53 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
             {/* Map Card */}
             <Card>
               <CardContent className="pt-6">
-                <div className="aspect-square bg-gray-200 rounded-lg mb-4 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <MapPin className="h-12 w-12 text-primary" />
-                  </div>
-                </div>
+                {(company.address || company.city) && (
+                  <>
+                    {/* Google Maps Embed */}
+                    <div className="aspect-square bg-gray-100 rounded-lg mb-4 relative overflow-hidden border border-gray-200">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        allowFullScreen
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
+                          `${company.address || ''} ${company.city || ''} ${company.department || ''} Colombia`
+                        )}`}
+                        className="rounded-lg"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <p className="font-semibold text-gray-900">{company.address || company.city}</p>
+                      {company.city && company.department && (
+                        <p className="text-sm text-gray-600">{company.city}, {company.department}</p>
+                      )}
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${company.address || ''} ${company.city || ''} ${company.department || ''} Colombia`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm font-medium hover:underline"
+                        style={{ color: primaryColor }}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Abrir en Google Maps
+                      </a>
+                    </div>
+                  </>
+                )}
                 
-                <div className="space-y-2">
-                  <p className="font-semibold">{company.address || company.city}</p>
-                  <Button variant="link" className="text-primary p-0 h-auto">
-                    » Obtener las direcciones
-                  </Button>
-                </div>
+                {!company.address && !company.city && (
+                  <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+                    <div className="text-center p-6">
+                      <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">Sin ubicación</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

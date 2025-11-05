@@ -15,6 +15,7 @@ export type Database = {
           category: 'egresado' | 'empresa' | 'instructor'
           email: string
           phone: string | null
+          whatsapp: string | null
           website: string | null
           address: string | null
           city: string | null
@@ -45,6 +46,7 @@ export type Database = {
           category: 'egresado' | 'empresa' | 'instructor'
           email: string
           phone?: string | null
+          whatsapp?: string | null
           website?: string | null
           address?: string | null
           city?: string | null
@@ -75,6 +77,7 @@ export type Database = {
           category?: 'egresado' | 'empresa' | 'instructor'
           email?: string
           phone?: string | null
+          whatsapp?: string | null
           website?: string | null
           address?: string | null
           city?: string | null

@@ -28,7 +28,11 @@ import {
   GripVertical,
   Image as ImageIcon,
   Upload,
-  Trash
+  Trash,
+  MessageSquare,
+  Star,
+  Check,
+  XCircle as XCircleIcon
 } from "lucide-react";
 
 interface LinkItem {
@@ -88,17 +92,6 @@ interface CompanyData {
   theme: string;
 }
 
-const sidebarItems = [
-  { id: "links", label: "Enlaces", icon: Link, active: true },
-  { id: "shop", label: "Tienda", icon: Store },
-  { id: "images", label: "Imágenes", icon: ImageIcon },
-  { id: "design", label: "Diseño", icon: Palette },
-  { id: "earn", label: "Ganar", icon: DollarSign, badge: "NUEVO" },
-  { id: "overview", label: "Vista General", icon: BarChart3 },
-  { id: "audience", label: "Audiencia", icon: Users },
-  { id: "insights", label: "Estadísticas", icon: TrendingUp }
-];
-
 export function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("links");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -121,6 +114,7 @@ export function AdminDashboard() {
     category: "",
     stock_quantity: "0"
   });
+  const [uploadingProductImage, setUploadingProductImage] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<string>("sena-green");
   const [customColor, setCustomColor] = useState<string>("#2F4D2A");
   const [isSavingTheme, setIsSavingTheme] = useState(false);
@@ -134,12 +128,36 @@ export function AdminDashboard() {
     gallery: [] as string[]
   });
   
+  // Estados para opiniones/reviews
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+  const [pendingReviewsCount, setPendingReviewsCount] = useState(0);
+  
   const router = useRouter();
   const supabase = createClient();
+
+  // Menu items con badge dinámico
+  const sidebarItems = [
+    { id: "links", label: "Enlaces", icon: Link, active: true },
+    { id: "shop", label: "Tienda", icon: Store },
+    { id: "images", label: "Imágenes", icon: ImageIcon },
+    { id: "reviews", label: "Opiniones", icon: MessageSquare, badge: pendingReviewsCount > 0 ? String(pendingReviewsCount) : undefined },
+    { id: "design", label: "Diseño", icon: Palette },
+    { id: "earn", label: "Ganar", icon: DollarSign, badge: "NUEVO" },
+    { id: "overview", label: "Vista General", icon: BarChart3 },
+    { id: "audience", label: "Audiencia", icon: Users },
+    { id: "insights", label: "Estadísticas", icon: TrendingUp }
+  ];
 
   useEffect(() => {
     loadCompanyData();
   }, []);
+
+  useEffect(() => {
+    if (companyData?.id) {
+      loadReviews();
+    }
+  }, [companyData?.id]);
 
   const loadCompanyData = async () => {
     try {
@@ -274,6 +292,86 @@ export function AdminDashboard() {
       console.error('Error al cargar datos:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadReviews = async () => {
+    if (!companyData?.id) return;
+    
+    try {
+      setIsLoadingReviews(true);
+      
+      const { data, error } = await supabase
+        .from('company_reviews')
+        .select('*')
+        .eq('company_id', companyData.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error al cargar opiniones:', error);
+        return;
+      }
+      
+      setReviews(data || []);
+      
+      // Contar opiniones pendientes
+      const pending = data?.filter(review => !review.is_approved).length || 0;
+      setPendingReviewsCount(pending);
+      
+    } catch (error) {
+      console.error('Error al cargar opiniones:', error);
+    } finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  const approveReview = async (reviewId: string) => {
+    try {
+      const { error } = await supabase
+        .from('company_reviews')
+        .update({ is_approved: true })
+        .eq('id', reviewId);
+      
+      if (error) {
+        console.error('Error al aprobar opinión:', error);
+        alert('Error al aprobar la opinión');
+        return;
+      }
+      
+      // Recargar opiniones
+      await loadReviews();
+      alert('Opinión aprobada exitosamente');
+      
+    } catch (error) {
+      console.error('Error al aprobar opinión:', error);
+      alert('Error al aprobar la opinión');
+    }
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    if (!confirm('¿Estás seguro de eliminar esta opinión?')) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('company_reviews')
+        .delete()
+        .eq('id', reviewId);
+      
+      if (error) {
+        console.error('Error al eliminar opinión:', error);
+        alert('Error al eliminar la opinión');
+        return;
+      }
+      
+      // Recargar opiniones
+      await loadReviews();
+      alert('Opinión eliminada exitosamente');
+      
+    } catch (error) {
+      console.error('Error al eliminar opinión:', error);
+      alert('Error al eliminar la opinión');
     }
   };
 
@@ -693,6 +791,62 @@ export function AdminDashboard() {
     }
   };
 
+  const uploadProductImage = async (file: File) => {
+    if (!companyData) return;
+    
+    setUploadingProductImage(true);
+    
+    try {
+      // Crear nombre único para el archivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${companyData.id}/products/product-${Date.now()}.${fileExt}`;
+      
+      // Subir imagen a Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('company-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('company-images')
+        .getPublicUrl(fileName);
+      
+      // Actualizar formulario con la URL
+      setProductForm(prev => ({ ...prev, image_url: publicUrl }));
+      
+      alert('Imagen subida con éxito');
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      alert('Error al subir la imagen');
+    } finally {
+      setUploadingProductImage(false);
+    }
+  };
+
+  const handleProductImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+      }
+      
+      // Validar tamaño (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no debe superar los 5MB');
+        return;
+      }
+      
+      uploadProductImage(file);
+    }
+  };
+
   const renderLinksSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -886,9 +1040,60 @@ export function AdminDashboard() {
         </button>
       </div>
 
+      {/* WhatsApp Configuration */}
+      <div className="bg-gradient-to-br from-green-50 to-green-100/50 border-2 border-green-300 rounded-xl p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-green-500 rounded-xl">
+            <MessageSquare className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-green-900 mb-2">Configuración de WhatsApp para Ventas</h3>
+            <p className="text-sm text-green-800 mb-4">
+              Los clientes serán redirigidos a este número cuando hagan clic en "Comprar"
+            </p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={companyData?.whatsapp || ''}
+                onChange={(e) => {
+                  if (companyData) {
+                    setCompanyData({ ...companyData, whatsapp: e.target.value });
+                  }
+                }}
+                placeholder="Ej: 573001234567 (sin +)"
+                className="flex-1 px-4 py-3 border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none text-gray-900"
+              />
+              <button
+                onClick={async () => {
+                  if (!companyData) return;
+                  try {
+                    const { error } = await supabase
+                      .from('companies')
+                      .update({ whatsapp: companyData.whatsapp })
+                      .eq('id', companyData.id);
+                    
+                    if (error) throw error;
+                    alert('WhatsApp actualizado con éxito');
+                  } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al actualizar WhatsApp');
+                  }
+                }}
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Guardar
+              </button>
+            </div>
+            <p className="text-xs text-green-700 mt-2">
+              💡 Ingresa el número con código de país sin el símbolo +. Ejemplo: 573001234567
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Lista de productos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{products.map((product) => (
           <div 
             key={product.id}
             className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-[hsl(111,29%,23%)]/30 transition-all"
@@ -1088,30 +1293,58 @@ export function AdminDashboard() {
                 />
               </div>
 
-              {/* URL de imagen */}
+              {/* Imagen del producto */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL de imagen
+                  Imagen del producto
                 </label>
-                <input
-                  type="text"
-                  value={productForm.image_url}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, image_url: e.target.value }))}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
-                  placeholder="https://..."
-                />
+                
+                {/* Preview de imagen actual */}
                 {productForm.image_url && (
-                  <div className="mt-2">
+                  <div className="mb-4 relative">
                     <img 
                       src={productForm.image_url} 
                       alt="Preview" 
-                      className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
+                      className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setProductForm(prev => ({ ...prev, image_url: '' }))}
+                      className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-lg"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
+                
+                {/* Botón para subir imagen */}
+                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${
+                  uploadingProductImage 
+                    ? 'border-gray-300 bg-gray-50 cursor-not-allowed' 
+                    : 'border-[hsl(111,29%,23%)] bg-[hsl(111,29%,23%)]/5 hover:bg-[hsl(111,29%,23%)]/10'
+                }`}>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleProductImageSelect}
+                    disabled={uploadingProductImage}
+                  />
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    {uploadingProductImage ? (
+                      <>
+                        <div className="w-8 h-8 border-4 border-gray-300 border-t-[hsl(111,29%,23%)] rounded-full animate-spin mb-2"></div>
+                        <p className="text-sm text-gray-600">Subiendo imagen...</p>
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-10 h-10 text-[hsl(111,29%,23%)] mb-2" />
+                        <p className="text-sm text-gray-700 font-medium">Haz clic para subir una imagen</p>
+                        <p className="text-xs text-gray-500 mt-1">PNG, JPG o WebP (máx. 5MB)</p>
+                      </>
+                    )}
+                  </div>
+                </label>
               </div>
             </div>
 
@@ -1371,6 +1604,206 @@ export function AdminDashboard() {
     </div>
   );
 
+  const renderReviewsSection = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Opiniones</h2>
+          <p className="text-gray-600">Aprueba, rechaza o elimina las opiniones de tus clientes</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="bg-yellow-100 border-2 border-yellow-300 rounded-xl px-4 py-2">
+            <p className="text-sm text-yellow-800 font-medium">
+              <span className="font-bold text-xl">{pendingReviewsCount}</span> pendientes
+            </p>
+          </div>
+          <div className="bg-green-100 border-2 border-green-300 rounded-xl px-4 py-2">
+            <p className="text-sm text-green-800 font-medium">
+              <span className="font-bold text-xl">{reviews.filter(r => r.is_approved).length}</span> aprobadas
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <MessageSquare className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Opiniones</p>
+              <p className="text-2xl font-bold text-gray-800">{reviews.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <Star className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Calificación Promedio</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {reviews.length > 0 
+                  ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+                  : '0.0'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <Star className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Pendientes</p>
+              <p className="text-2xl font-bold text-yellow-600">{pendingReviewsCount}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Check className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Aprobadas</p>
+              <p className="text-2xl font-bold text-green-600">{reviews.filter(r => r.is_approved).length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reviews List */}
+      {isLoadingReviews ? (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[hsl(111,29%,23%)]"></div>
+          <p className="mt-4 text-gray-600">Cargando opiniones...</p>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl">
+          <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium mb-2">No hay opiniones aún</p>
+          <p className="text-sm text-gray-500">Las opiniones de tus clientes aparecerán aquí</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <div 
+              key={review.id}
+              className={`bg-white border-2 rounded-xl p-6 transition-all ${
+                review.is_approved 
+                  ? 'border-green-200 bg-green-50/30' 
+                  : 'border-yellow-200 bg-yellow-50/30'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                {/* Review Content */}
+                <div className="flex-1 space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="font-bold text-lg text-gray-800">{review.title}</h4>
+                        {review.is_approved ? (
+                          <span className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full">
+                            APROBADA
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full">
+                            PENDIENTE
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Stars */}
+                      <div className="flex items-center gap-2 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-5 h-5 ${
+                              star <= review.rating
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                        <span className="text-sm font-bold text-gray-700 ml-1">
+                          {review.rating} de 5
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comment */}
+                  <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+
+                  {/* Author & Date */}
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span className="font-medium">{review.author_name}</span>
+                    <span>•</span>
+                    <span>{new Date(review.created_at).toLocaleDateString('es-CO', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-2">
+                  {!review.is_approved && (
+                    <button
+                      onClick={() => approveReview(review.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all"
+                    >
+                      <Check className="w-4 h-4" />
+                      Aprobar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteReview(review.id)}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all"
+                  >
+                    <XCircleIcon className="w-4 h-4" />
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Info Panel */}
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 border-2 border-purple-200 rounded-xl p-6">
+        <div className="flex gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold text-purple-900 mb-2">Sobre la gestión de opiniones</h4>
+            <ul className="space-y-1 text-sm text-purple-800">
+              <li>• Las opiniones nuevas aparecen como <strong>PENDIENTE</strong> hasta que las apruebes</li>
+              <li>• Solo las opiniones aprobadas se muestran en tu perfil público</li>
+              <li>• Puedes eliminar opiniones inapropiadas o spam en cualquier momento</li>
+              <li>• La calificación promedio se calcula solo con opiniones aprobadas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderDesignSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -1602,6 +2035,8 @@ export function AdminDashboard() {
         return renderShopSection();
       case "images":
         return renderImagesSection();
+      case "reviews":
+        return renderReviewsSection();
       case "design":
         return renderDesignSection();
       default:
