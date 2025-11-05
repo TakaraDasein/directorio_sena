@@ -635,6 +635,30 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
               </Card>
             )}
 
+            {/* Entrepreneur Section - Si existe información del emprendedor */}
+            {((company as any).entrepreneur_name || (company as any).entrepreneur_image_url) && (
+              <Card className="border border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">Conoce al Emprendedor</h2>
+                  <div className="flex items-center gap-6">
+                    {(company as any).entrepreneur_image_url && (
+                      <img 
+                        src={(company as any).entrepreneur_image_url} 
+                        alt={(company as any).entrepreneur_name || 'Emprendedor'}
+                        className="w-24 h-24 md:w-28 md:h-28 rounded-full object-cover border-4 border-white shadow-lg"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                        {(company as any).entrepreneur_name || 'Emprendedor'}
+                      </h3>
+                      <p className="text-gray-600 font-medium">Empresario</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Company Details Grid - Estilo Vercel */}
             <Card className="border border-gray-200">
               <CardContent className="pt-6">

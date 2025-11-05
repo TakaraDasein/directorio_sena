@@ -155,6 +155,11 @@ export function AdminDashboard() {
   });
   const [uploadingBlogImage, setUploadingBlogImage] = useState(false);
   
+  // Estados para emprendedor
+  const [entrepreneurName, setEntrepreneurName] = useState("");
+  const [entrepreneurImageUrl, setEntrepreneurImageUrl] = useState("");
+  const [uploadingEntrepreneurImage, setUploadingEntrepreneurImage] = useState(false);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -163,6 +168,7 @@ export function AdminDashboard() {
     { id: "links", label: "Enlaces", icon: Link, active: true },
     { id: "shop", label: "Tienda", icon: Store },
     { id: "images", label: "Imágenes", icon: ImageIcon },
+    { id: "entrepreneur", label: "Emprendedor", icon: User },
     { id: "hours", label: "Horarios", icon: Clock },
     { id: "blogs", label: "Blogs", icon: FileText },
     { id: "reviews", label: "Opiniones", icon: MessageSquare, badge: pendingReviewsCount > 0 ? String(pendingReviewsCount) : undefined },
@@ -214,6 +220,10 @@ export function AdminDashboard() {
         // Cargar tema personalizado
         setSelectedTheme(company.selected_theme || 'sena-green');
         setCustomColor(company.custom_color || '#2F4D2A');
+        
+        // Cargar datos del emprendedor
+        setEntrepreneurName(company.entrepreneur_name || '');
+        setEntrepreneurImageUrl(company.entrepreneur_image_url || '');
         
         // Establecer perfil de usuario
         setUserProfile({
@@ -1170,6 +1180,91 @@ export function AdminDashboard() {
     }
   };
 
+  // ====== FUNCIONES PARA EMPRENDEDOR ======
+  
+  const uploadEntrepreneurImage = async (file: File) => {
+    if (!companyData) return;
+    
+    setUploadingEntrepreneurImage(true);
+    
+    try {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+      }
+      
+      // Validar tamaño (max 800KB)
+      if (file.size > 800 * 1024) {
+        alert('La imagen no debe superar los 800KB');
+        return;
+      }
+      
+      // Crear nombre único para el archivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${companyData.id}/entrepreneur-${Date.now()}.${fileExt}`;
+      
+      // Subir imagen a Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('company-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (uploadError) throw uploadError;
+      
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('company-images')
+        .getPublicUrl(fileName);
+      
+      // Guardar URL en la base de datos
+      const { error: updateError } = await supabase
+        .from('companies')
+        .update({ entrepreneur_image_url: publicUrl })
+        .eq('id', companyData.id);
+      
+      if (updateError) throw updateError;
+      
+      setEntrepreneurImageUrl(publicUrl);
+      alert('Imagen del emprendedor subida con éxito');
+    } catch (error) {
+      console.error('Error al subir imagen del emprendedor:', error);
+      alert('Error al subir la imagen');
+    } finally {
+      setUploadingEntrepreneurImage(false);
+    }
+  };
+
+  const saveEntrepreneurData = async () => {
+    if (!companyData) return;
+    
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ 
+          entrepreneur_name: entrepreneurName,
+          entrepreneur_image_url: entrepreneurImageUrl 
+        })
+        .eq('id', companyData.id);
+      
+      if (error) throw error;
+      
+      alert('Datos del emprendedor guardados con éxito');
+    } catch (error) {
+      console.error('Error al guardar datos del emprendedor:', error);
+      alert('Error al guardar los datos');
+    }
+  };
+
+  const handleEntrepreneurImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadEntrepreneurImage(file);
+    }
+  };
+
   const renderLinksSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -1964,6 +2059,155 @@ export function AdminDashboard() {
           </div>
         </div>
       </div>
+    </div>
+  );
+
+  const renderEntrepreneurSection = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Emprendedor</h1>
+          <p className="text-gray-600 mt-2 text-base">Información del fundador o emprendedor</p>
+        </div>
+      </div>
+
+      {/* Panel informativo */}
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+        <div className="flex gap-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold text-blue-900 mb-1">Información del emprendedor</h4>
+            <ul className="space-y-1 text-sm text-blue-800">
+              <li>• Agrega una foto del fundador o emprendedor</li>
+              <li>• La imagen debe ser cuadrada (recomendado 400x400px)</li>
+              <li>• Tamaño máximo: 800KB</li>
+              <li>• Se mostrará en la ficha pública con el nombre y el rol "Empresario"</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Formulario */}
+      <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+        <div className="space-y-6">
+          {/* Imagen del emprendedor */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Foto del Emprendedor
+            </label>
+            
+            {entrepreneurImageUrl ? (
+              <div className="relative inline-block">
+                <img 
+                  src={entrepreneurImageUrl} 
+                  alt="Emprendedor"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                />
+                <button
+                  onClick={() => {
+                    if (confirm('¿Eliminar la foto del emprendedor?')) {
+                      setEntrepreneurImageUrl('');
+                      saveEntrepreneurData();
+                    }
+                  }}
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  id="entrepreneur-image"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleEntrepreneurImageSelect}
+                  disabled={uploadingEntrepreneurImage}
+                />
+                <label
+                  htmlFor="entrepreneur-image"
+                  className={`flex items-center gap-2 px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium ${
+                    uploadingEntrepreneurImage ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {uploadingEntrepreneurImage ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Subiendo...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Subir Foto
+                    </>
+                  )}
+                </label>
+                <p className="text-sm text-gray-500">Máximo 800KB • Formato cuadrado recomendado</p>
+              </div>
+            )}
+          </div>
+
+          {/* Nombre del emprendedor */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre del Emprendedor
+            </label>
+            <input
+              type="text"
+              value={entrepreneurName}
+              onChange={(e) => setEntrepreneurName(e.target.value)}
+              placeholder="Ej: Juan Pérez González"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[hsl(111,29%,23%)] focus:ring-2 focus:ring-[hsl(111,29%,23%)]/20 transition-all text-gray-900"
+            />
+            <p className="text-sm text-gray-500 mt-2">Este nombre se mostrará junto a la foto en la ficha pública</p>
+          </div>
+
+          {/* Botón guardar */}
+          <div className="flex justify-end pt-4 border-t border-gray-200">
+            <button
+              onClick={saveEntrepreneurData}
+              className="flex items-center gap-2 px-8 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg"
+            >
+              <Check className="w-5 h-5" />
+              Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Vista previa */}
+      {(entrepreneurImageUrl || entrepreneurName) && (
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Vista Previa</h3>
+          <div className="bg-white rounded-lg p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              {entrepreneurImageUrl ? (
+                <img 
+                  src={entrepreneurImageUrl} 
+                  alt={entrepreneurName || 'Emprendedor'}
+                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="w-10 h-10 text-gray-400" />
+                </div>
+              )}
+              <div>
+                <h4 className="text-xl font-bold text-gray-900">
+                  {entrepreneurName || 'Nombre del Emprendedor'}
+                </h4>
+                <p className="text-gray-600">Empresario</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -2883,6 +3127,8 @@ export function AdminDashboard() {
         return renderShopSection();
       case "images":
         return renderImagesSection();
+      case "entrepreneur":
+        return renderEntrepreneurSection();
       case "hours":
         return renderHoursSection();
       case "blogs":
