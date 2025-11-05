@@ -7,6 +7,7 @@ import { useState } from "react"
 import Link from "next/link"
 
 const MENU_ITEMS = [
+  { label: "Directorio", href: "/search" },
   { label: "Blogs", href: "/blog" }, 
 ] as const
 
