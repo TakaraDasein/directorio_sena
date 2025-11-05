@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { Logo } from "@/components/logo"
+import { Menu, X } from "lucide-react"
+import Link from "next/link"
 import {
   Building2,
   MapPin,
@@ -72,6 +75,7 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   const [imageError, setImageError] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const supabase = createClient()
   
   // Estados para review/calificación
@@ -321,6 +325,80 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Navbar con tema de la empresa */}
+      <nav 
+        className="sticky top-0 z-50 py-3.5 md:py-4 shadow-sm"
+        style={{ backgroundColor: primaryColor }}
+      >
+        <div className="container px-6 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex-shrink-0">
+            <Logo className="h-8 w-auto text-white" />
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link 
+              href="https://www.directoriosena.com/search" 
+              className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+            >
+              Directorio
+            </Link>
+            <Link 
+              href="/blog" 
+              className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+            >
+              Blogs
+            </Link>
+            <Link href="/auth">
+              <Button 
+                variant="outline" 
+                className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white hover:border-white/30"
+              >
+                Unirme
+              </Button>
+            </Link>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden text-white p-2"
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden mt-4 pb-4 px-6 space-y-3">
+            <Link 
+              href="https://www.directoriosena.com/search"
+              className="block text-white/90 hover:text-white transition-colors text-sm font-medium py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Directorio
+            </Link>
+            <Link 
+              href="/blog"
+              className="block text-white/90 hover:text-white transition-colors text-sm font-medium py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Blogs
+            </Link>
+            <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
+              <Button 
+                variant="outline" 
+                className="w-full bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white hover:border-white/30"
+              >
+                Unirme
+              </Button>
+            </Link>
+          </div>
+        )}
+      </nav>
+
       {/* Hero Section - Minimalista estilo Vercel */}
       <div className="relative border-b border-gray-200">
         {/* Cover Image - Más bajo y elegante */}
