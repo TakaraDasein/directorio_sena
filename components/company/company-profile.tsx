@@ -71,6 +71,8 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageError, setImageError] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
+  const supabase = createClient()
   
   // Estados para review/calificación
   const [rating, setRating] = useState(0)
@@ -88,6 +90,17 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
   // Estados para horarios
   const [businessHours, setBusinessHours] = useState<any[]>([])
   const [isLoadingHours, setIsLoadingHours] = useState(true)
+  
+  // Verificar si el usuario es dueño del perfil
+  useEffect(() => {
+    const checkOwnership = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user && company.user_id === user.id) {
+        setIsOwner(true)
+      }
+    }
+    checkOwnership()
+  }, [company.user_id])
   
   // Obtener color personalizado
   const primaryColor = (company as any).custom_color || company.theme_color || '#2F4D2A';
@@ -410,6 +423,17 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
                   
                   {/* Action Buttons - Estilo Vercel */}
                   <div className="flex gap-2 shrink-0">
+                    {isOwner && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => window.location.href = '/admin'}
+                        className="custom-primary-bg border-0 hover:opacity-90 text-white"
+                      >
+                        <Building2 className="h-4 w-4 mr-1.5" />
+                        Ir al Admin
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"

@@ -2934,7 +2934,7 @@ export function AdminDashboard() {
           {/* Quick Actions */}
           <div className="flex gap-2">
             <button
-              onClick={() => companyData && router.push(`/${companyData.slug}`)}
+              onClick={() => companyData && window.open(`/${companyData.slug}`, '_blank')}
               className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-gray-200 rounded-lg hover:bg-gray-50 hover:border-[hsl(111,29%,23%)]/30 transition-all text-sm font-medium text-gray-700"
             >
               <Eye className="w-4 h-4" />
