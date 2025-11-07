@@ -197,7 +197,7 @@ const AuthPage: React.FC = () => {
 
       if (data.user) {
         setSuccess(
-          `¡Registro exitoso! Tu URL será: https://directorio.sena.edu.co/${registerData.username}\n\nRevisa tu correo para confirmar tu cuenta.`
+          `¡Registro exitoso! Tu URL será: https://www.directoriosena.com/${registerData.username}\n\nRevisa tu correo para confirmar tu cuenta.`
         )
         // Limpiar formulario
         setRegisterData({
@@ -250,7 +250,7 @@ const AuthPage: React.FC = () => {
               <div>
                 <h3 className="font-semibold">Tu URL Única</h3>
                 <p className="text-sm text-primary-foreground/80">
-                  directorio.sena.edu.co/tu-nombre
+                  https://www.directoriosena.com/tu-nombre
                 </p>
               </div>
             </div>
@@ -423,7 +423,7 @@ const AuthPage: React.FC = () => {
                       </Label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
-                          directorio.sena.edu.co/
+                          https://www.directoriosena.com/
                         </span>
                         <Input
                           id="register-username"
@@ -455,7 +455,7 @@ const AuthPage: React.FC = () => {
                       )}
                       {slugAvailable && registerData.username.length >= 3 && (
                         <p className="text-xs text-green-600 mt-1">
-                          ✓ Disponible: https://directorio.sena.edu.co/{registerData.username}
+                          ✓ Disponible: https://www.directoriosena.com/{registerData.username}
                         </p>
                       )}
                       <p className="text-xs text-gray-500 mt-1">

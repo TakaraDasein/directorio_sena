@@ -166,7 +166,7 @@ export function getSocialUrl(platform: string, socialData?: SocialMedia): string
     youtube: "https://youtube.com/",
     twitter: "https://x.com/",
     spotify: "https://spotify.com/",
-    website: "https://directorio.sena.edu.co/"
+    website: "https://www.directoriosena.com/"
   };
 
   return fallbackUrls[platform] || "#";

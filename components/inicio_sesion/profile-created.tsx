@@ -126,7 +126,7 @@ export function ProfileCreated() {
       const userData = JSON.parse(user);
       setUserData(userData);
       // Calcular URL del perfil
-      const url = `https://directorio.sena.edu.co/${userData?.name?.toLowerCase().replace(/\s+/g, '') || 'usuario'}`;
+      const url = `https://www.directoriosena.com/${userData?.name?.toLowerCase().replace(/\s+/g, '') || 'usuario'}`;
       setProfileUrl(url);
       setBio(userData.bio || "");
     }

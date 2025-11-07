@@ -148,7 +148,7 @@ const CompanyNameStep: React.FC = () => {
                 </Label>
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <span className="text-sm text-gray-600">
-                    https://directorio.sena.edu.co/
+                    https://www.directoriosena.com/
                   </span>
                   <span className="text-sm font-semibold text-primary">
                     {slug}
