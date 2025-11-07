@@ -1138,8 +1138,14 @@ export function AdminDashboard() {
       // Actualizar URLs locales
       if (imageType === 'logo') {
         setImageUrls(prev => ({ ...prev, logo: '' }));
+        // Reset input file
+        const logoInput = document.getElementById('logo-upload') as HTMLInputElement;
+        if (logoInput) logoInput.value = '';
       } else if (imageType === 'cover') {
         setImageUrls(prev => ({ ...prev, cover: '' }));
+        // Reset input file
+        const coverInput = document.getElementById('cover-upload') as HTMLInputElement;
+        if (coverInput) coverInput.value = '';
       } else if (imageType === 'gallery') {
         const deletedImage = companyImages.find(img => img.id === imageId);
         if (deletedImage) {
@@ -1148,6 +1154,9 @@ export function AdminDashboard() {
             gallery: prev.gallery.filter(url => url !== deletedImage.image_url) 
           }));
         }
+        // Reset input file
+        const galleryInput = document.getElementById('gallery-upload') as HTMLInputElement;
+        if (galleryInput) galleryInput.value = '';
       }
       
       alert('Imagen eliminada con éxito');
@@ -1163,16 +1172,20 @@ export function AdminDashboard() {
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
         alert('Por favor selecciona un archivo de imagen válido');
+        event.target.value = ''; // Reset input
         return;
       }
       
       // Validar tamaño (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('La imagen no debe superar los 5MB');
+        event.target.value = ''; // Reset input
         return;
       }
       
       uploadImage(file, imageType);
+      // Reset input después de seleccionar para permitir seleccionar el mismo archivo de nuevo
+      event.target.value = '';
     }
   };
 
