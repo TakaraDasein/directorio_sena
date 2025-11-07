@@ -23,6 +23,8 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const router = useRouter();
   const supabase = createClient();
   
@@ -104,7 +106,7 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
           data: {
             full_name: registerData.name,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `https://www.directoriosena.com/auth/callback`,
         },
       });
 
@@ -139,6 +141,37 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
     } catch (error: any) {
       console.error("Error en registro:", error);
       setError(error.message || "Error al crear la cuenta. Intenta nuevamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `https://www.directoriosena.com/auth/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setSuccessMessage(
+        "Te hemos enviado un correo electrónico con las instrucciones para recuperar tu contraseña."
+      );
+      setResetEmail("");
+      
+      // Volver al login después de 5 segundos
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setSuccessMessage(null);
+      }, 5000);
+    } catch (error: any) {
+      console.error("Error en recuperación:", error);
+      setError(error.message || "Error al enviar el correo de recuperación.");
     } finally {
       setIsLoading(false);
     }
@@ -259,6 +292,63 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
                 </TabsList>
             
                 <TabsContent value="login" className="space-y-4">
+                  {showForgotPassword ? (
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                      <div className="space-y-2 text-center mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Recuperar Contraseña</h3>
+                        <p className="text-sm text-gray-600">
+                          Ingresa tu correo electrónico y te enviaremos las instrucciones para recuperar tu contraseña.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email" className="text-gray-900">
+                          Correo Electrónico
+                        </Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                          <Input
+                            id="reset-email"
+                            type="email"
+                            placeholder="tu@email.com"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          "Enviar Instrucciones"
+                        )}
+                      </Button>
+                      
+                      <div className="text-center mt-4">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            setError(null);
+                            setSuccessMessage(null);
+                          }}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Volver al inicio de sesión
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="login-email" className="text-gray-900">
@@ -319,11 +409,16 @@ const LoginRegister: React.FC<LoginRegisterProps> = ({ onSuccess }) => {
                     </Button>
                     
                     <div className="text-center mt-4">
-                      <a href="#" className="text-sm text-primary hover:underline">
+                      <button 
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-sm text-primary hover:underline"
+                      >
                         ¿Olvidaste tu contraseña?
-                      </a>
+                      </button>
                     </div>
                   </form>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="register" className="space-y-4">

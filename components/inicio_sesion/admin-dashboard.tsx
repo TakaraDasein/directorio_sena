@@ -1311,12 +1311,12 @@ export function AdminDashboard() {
   const renderLinksSection = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Links</h1>
-          <p className="text-gray-600 mt-2 text-base">Administra tus enlaces y contenido</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Links</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">Administra tus enlaces y contenido</p>
         </div>
-        <button className="flex items-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium">
+        <button className="flex items-center justify-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-4 md:px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium text-sm md:text-base w-full sm:w-auto">
           <Plus className="w-5 h-5" />
           Agregar
         </button>
@@ -1324,8 +1324,8 @@ export function AdminDashboard() {
 
       {/* Add Collection */}
       <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[hsl(111,29%,23%)]/5 to-transparent rounded-lg border border-[hsl(111,29%,23%)]/20 hover:border-[hsl(111,29%,23%)]/40 transition-colors cursor-pointer group">
-        <input type="checkbox" className="rounded border-[hsl(111,29%,23%)] text-[hsl(111,29%,23%)] focus:ring-[hsl(111,29%,23%)] focus:ring-offset-0 w-5 h-5" />
-        <span className="text-base font-medium text-gray-700 group-hover:text-gray-900">Agregar colección</span>
+        <input type="checkbox" className="rounded border-[hsl(111,29%,23%)] text-[hsl(111,29%,23%)] focus:ring-[hsl(111,29%,23%)] focus:ring-offset-0 w-5 h-5 flex-shrink-0" />
+        <span className="text-sm md:text-base font-medium text-gray-700 group-hover:text-gray-900">Agregar colección</span>
       </div>
 
       {/* Links List */}
@@ -1337,7 +1337,7 @@ export function AdminDashboard() {
             onDragStart={() => handleDragStart(index)}
             onDragOver={(e) => handleDragOver(e, index)}
             onDragEnd={handleDragEnd}
-            className={`bg-white border-2 rounded-xl p-5 transition-all ${
+            className={`bg-white border-2 rounded-xl p-4 md:p-5 transition-all ${
               draggedIndex === index 
                 ? 'opacity-50 border-[hsl(111,29%,23%)]' 
                 : 'border-gray-200 hover:shadow-lg hover:border-[hsl(111,29%,23%)]/30'
@@ -1352,7 +1352,7 @@ export function AdminDashboard() {
                     type="text"
                     value={editForm.title}
                     onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
+                    className="w-full px-3 md:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900 text-sm md:text-base"
                     placeholder="Título del enlace"
                   />
                 </div>
@@ -1362,21 +1362,21 @@ export function AdminDashboard() {
                     type="text"
                     value={editForm.url}
                     onChange={(e) => setEditForm(prev => ({ ...prev, url: e.target.value }))}
-                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
+                    className="w-full px-3 md:px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900 text-sm md:text-base"
                     placeholder="https://..."
                   />
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
                   <button
                     onClick={cancelEditing}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm md:text-base"
                   >
                     <XCircle className="w-4 h-4" />
                     Cancelar
                   </button>
                   <button
                     onClick={() => saveEdit(link.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg transition-colors"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg transition-colors text-sm md:text-base"
                   >
                     <Save className="w-4 h-4" />
                     Guardar
@@ -1385,22 +1385,22 @@ export function AdminDashboard() {
               </div>
             ) : (
               // MODO VISTA
-              <div className="flex items-center justify-between">
-                {/* Drag Handle */}
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="cursor-move text-gray-400 hover:text-[hsl(111,29%,23%)] transition-colors">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Drag Handle & Link Info */}
+                <div className="flex items-start gap-3 md:gap-4 flex-1 min-w-0">
+                  <div className="cursor-move text-gray-400 hover:text-[hsl(111,29%,23%)] transition-colors flex-shrink-0 mt-1">
                     <GripVertical className="w-5 h-5" />
                   </div>
 
                   {/* Link Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-gray-900 text-lg">{link.title}</h3>
+                      <h3 className="font-semibold text-gray-900 text-base md:text-lg truncate">{link.title}</h3>
                       <a 
                         href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:text-[hsl(111,29%,23%)] transition-colors"
+                        className="hover:text-[hsl(111,29%,23%)] transition-colors flex-shrink-0"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink className="w-4 h-4 text-[hsl(111,29%,23%)]" />
@@ -1410,7 +1410,7 @@ export function AdminDashboard() {
                       href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-gray-600 hover:text-[hsl(111,29%,23%)] truncate block transition-colors"
+                      className="text-xs md:text-sm text-gray-600 hover:text-[hsl(111,29%,23%)] truncate block transition-colors"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {link.url}
@@ -1419,16 +1419,16 @@ export function AdminDashboard() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-4 ml-4">
+                <div className="flex items-center gap-2 md:gap-4 ml-8 md:ml-4">
                   {/* Stats */}
-                  <div className="flex items-center gap-2 text-sm bg-[hsl(111,29%,23%)]/5 px-4 py-2 rounded-lg">
-                    <Eye className="w-4 h-4 text-[hsl(111,29%,23%)]" />
+                  <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm bg-[hsl(111,29%,23%)]/5 px-2 md:px-4 py-1.5 md:py-2 rounded-lg">
+                    <Eye className="w-3 h-3 md:w-4 md:h-4 text-[hsl(111,29%,23%)]" />
                     <span className="font-semibold text-gray-900">{link.clicks}</span>
-                    <span className="text-gray-600">clicks</span>
+                    <span className="text-gray-600 hidden sm:inline">clicks</span>
                   </div>
 
                   {/* Toggle */}
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
                     <input
                       type="checkbox"
                       checked={link.isActive}
@@ -1442,21 +1442,21 @@ export function AdminDashboard() {
                   <div className="flex items-center gap-1">
                     <button 
                       onClick={() => startEditing(link)}
-                      className="p-2 hover:bg-[hsl(111,29%,23%)]/10 rounded-lg transition-colors"
+                      className="p-2 hover:bg-[hsl(111,29%,23%)]/10 rounded-lg transition-colors touch-manipulation"
                       title="Editar"
                     >
                       <Edit3 className="w-4 h-4 text-gray-600" />
                     </button>
                     <button 
                       onClick={() => copyLink(link)}
-                      className="p-2 hover:bg-[hsl(111,29%,23%)]/10 rounded-lg transition-colors"
+                      className="p-2 hover:bg-[hsl(111,29%,23%)]/10 rounded-lg transition-colors touch-manipulation"
                       title="Copiar"
                     >
                       <Copy className="w-4 h-4 text-gray-600" />
                     </button>
                     <button 
                       onClick={() => deleteLink(link.id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors touch-manipulation"
                       title="Eliminar"
                     >
                       <Trash2 className="w-4 h-4 text-red-600" />
@@ -1487,14 +1487,14 @@ export function AdminDashboard() {
 
   const renderShopSection = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tienda</h1>
-          <p className="text-gray-600 mt-2 text-base">Administra tus productos y ventas</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Tienda</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">Administra tus productos y ventas</p>
         </div>
         <button 
           onClick={() => openProductModal()}
-          className="flex items-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-4 md:px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium touch-manipulation"
         >
           <Plus className="w-5 h-5" />
           Agregar Producto
@@ -1502,17 +1502,17 @@ export function AdminDashboard() {
       </div>
 
       {/* WhatsApp Configuration */}
-      <div className="bg-gradient-to-br from-green-50 to-green-100/50 border-2 border-green-300 rounded-xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-green-500 rounded-xl">
-            <MessageSquare className="w-6 h-6 text-white" />
+      <div className="bg-gradient-to-br from-green-50 to-green-100/50 border-2 border-green-300 rounded-xl p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start gap-4">
+          <div className="p-3 bg-green-500 rounded-xl flex-shrink-0">
+            <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-green-900 mb-2">Configuración de WhatsApp para Ventas</h3>
-            <p className="text-sm text-green-800 mb-4">
+          <div className="flex-1 w-full">
+            <h3 className="font-bold text-green-900 mb-2 text-base md:text-lg">Configuración de WhatsApp para Ventas</h3>
+            <p className="text-xs md:text-sm text-green-800 mb-4">
               Los clientes serán redirigidos a este número cuando hagan clic en "Comprar"
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
                 value={companyData?.whatsapp || ''}
@@ -1522,7 +1522,7 @@ export function AdminDashboard() {
                   }
                 }}
                 placeholder="Ej: 573001234567 (sin +)"
-                className="flex-1 px-4 py-3 border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none text-gray-900"
+                className="flex-1 px-3 md:px-4 py-3 border-2 border-green-300 rounded-lg focus:border-green-500 focus:outline-none text-gray-900 text-sm md:text-base"
               />
               <button
                 onClick={async () => {
@@ -1540,7 +1540,7 @@ export function AdminDashboard() {
                     alert('Error al actualizar WhatsApp');
                   }
                 }}
-                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-4 md:px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 touch-manipulation"
               >
                 <Save className="w-4 h-4" />
                 Guardar
@@ -1554,7 +1554,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Lista de productos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{products.map((product) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">{products.map((product) => (
           <div 
             key={product.id}
             className="bg-white border-2 border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-[hsl(111,29%,23%)]/30 transition-all"
@@ -1588,30 +1588,30 @@ export function AdminDashboard() {
             </div>
 
             {/* Información del producto */}
-            <div className="p-5">
+            <div className="p-4 md:p-5">
               <div className="mb-3">
-                <h3 className="font-bold text-lg text-gray-900 mb-1">{product.name}</h3>
+                <h3 className="font-bold text-base md:text-lg text-gray-900 mb-1">{product.name}</h3>
                 {product.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+                  <p className="text-xs md:text-sm text-gray-600 line-clamp-2">{product.description}</p>
                 )}
               </div>
 
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-2xl font-bold text-[hsl(111,29%,23%)]">
+                  <p className="text-xl md:text-2xl font-bold text-[hsl(111,29%,23%)]">
                     ${product.price.toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-500">Stock: {product.stock_quantity}</p>
                 </div>
                 {product.category && (
-                  <span className="px-3 py-1 bg-[hsl(111,29%,23%)]/10 text-[hsl(111,29%,23%)] rounded-full text-xs font-medium">
+                  <span className="px-2 md:px-3 py-1 bg-[hsl(111,29%,23%)]/10 text-[hsl(111,29%,23%)] rounded-full text-xs font-medium">
                     {product.category}
                   </span>
                 )}
               </div>
 
               {/* Estadísticas */}
-              <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">
+              <div className="flex items-center gap-3 md:gap-4 mb-4 text-xs text-gray-600">
                 <div className="flex items-center gap-1">
                   <Eye className="w-3 h-3" />
                   <span>{product.views_count}</span>
@@ -1622,7 +1622,8 @@ export function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-1">
                   <DollarSign className="w-3 h-3" />
-                  <span>{product.sales_count} ventas</span>
+                  <span className="hidden xs:inline">{product.sales_count} ventas</span>
+                  <span className="xs:hidden">{product.sales_count}</span>
                 </div>
               </div>
 
@@ -1630,14 +1631,15 @@ export function AdminDashboard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => openProductModal(product)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[hsl(111,29%,23%)]/10 hover:bg-[hsl(111,29%,23%)]/20 text-[hsl(111,29%,23%)] rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 md:px-4 py-2 bg-[hsl(111,29%,23%)]/10 hover:bg-[hsl(111,29%,23%)]/20 text-[hsl(111,29%,23%)] rounded-lg transition-colors touch-manipulation text-sm md:text-base"
                 >
                   <Edit3 className="w-4 h-4" />
-                  Editar
+                  <span className="hidden sm:inline">Editar</span>
                 </button>
                 <button
                   onClick={() => deleteProduct(product.id)}
-                  className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                  className="px-3 md:px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors touch-manipulation"
+                  title="Eliminar"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -1834,22 +1836,22 @@ export function AdminDashboard() {
   const renderImagesSection = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Imágenes</h1>
-          <p className="text-gray-600 mt-2 text-base">Gestiona el logo, portada y galería de tu ficha pública</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Imágenes</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">Gestiona el logo, portada y galería de tu ficha pública</p>
         </div>
       </div>
 
       {/* Información general */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <ImageIcon className="w-5 h-5 text-blue-600" />
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 md:p-4">
+        <div className="flex items-start gap-2 md:gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+            <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
           </div>
           <div>
-            <h4 className="font-bold text-blue-900 mb-1">Recomendaciones de imágenes</h4>
-            <ul className="space-y-1 text-sm text-blue-800">
+            <h4 className="font-bold text-blue-900 mb-1 text-sm md:text-base">Recomendaciones de imágenes</h4>
+            <ul className="space-y-1 text-xs md:text-sm text-blue-800">
               <li>• <strong>Peso máximo:</strong> 800 KB por imagen</li>
               <li>• <strong>Formatos:</strong> JPG, PNG, WebP</li>
               <li>• Imágenes de alta calidad para mejor visualización</li>
@@ -1859,28 +1861,28 @@ export function AdminDashboard() {
       </div>
 
       {/* Logo Section */}
-      <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-[hsl(111,29%,23%)]/10 rounded-lg">
-            <ImageIcon className="w-6 h-6 text-[hsl(111,29%,23%)]" />
+      <div className="bg-white border-2 border-gray-200 rounded-xl p-4 md:p-6 shadow-sm">
+        <div className="flex items-center gap-2 md:gap-3 mb-4">
+          <div className="p-2 bg-[hsl(111,29%,23%)]/10 rounded-lg flex-shrink-0">
+            <ImageIcon className="w-5 h-5 md:w-6 md:h-6 text-[hsl(111,29%,23%)]" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Logo</h3>
-            <p className="text-sm text-gray-600">
+          <div className="min-w-0">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900">Logo</h3>
+            <p className="text-xs md:text-sm text-gray-600">
               <strong>Tamaño sugerido:</strong> 400x400px (cuadrado) • 
               <strong className="ml-1">Máximo:</strong> 800 KB
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
           {/* Preview */}
-          <div className="flex-shrink-0">
-            <div className="w-40 h-40 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
+          <div className="flex-shrink-0 mx-auto md:mx-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
               {imageUrls.logo ? (
                 <img src={imageUrls.logo} alt="Logo" className="w-full h-full object-contain" />
               ) : (
-                <ImageIcon className="w-16 h-16 text-gray-400" />
+                <ImageIcon className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
               )}
             </div>
           </div>
@@ -1897,7 +1899,7 @@ export function AdminDashboard() {
             />
             <label
               htmlFor="logo-upload"
-              className={`flex items-center justify-center gap-2 px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium ${
+              className={`flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium touch-manipulation text-sm md:text-base ${
                 uploadingImage === 'logo' ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
@@ -1930,14 +1932,14 @@ export function AdminDashboard() {
       </div>
 
       {/* Cover Section */}
-      <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-[hsl(111,29%,23%)]/10 rounded-lg">
-            <ImageIcon className="w-6 h-6 text-[hsl(111,29%,23%)]" />
+      <div className="bg-white border-2 border-gray-200 rounded-xl p-4 md:p-6 shadow-sm">
+        <div className="flex items-center gap-2 md:gap-3 mb-4">
+          <div className="p-2 bg-[hsl(111,29%,23%)]/10 rounded-lg flex-shrink-0">
+            <ImageIcon className="w-5 h-5 md:w-6 md:h-6 text-[hsl(111,29%,23%)]" />
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">Imagen de Portada</h3>
-            <p className="text-sm text-gray-600">
+          <div className="min-w-0">
+            <h3 className="text-lg md:text-xl font-bold text-gray-900">Imagen de Portada</h3>
+            <p className="text-xs md:text-sm text-gray-600">
               <strong>Tamaño sugerido:</strong> 1920x480px (panorámico) • 
               <strong className="ml-1">Máximo:</strong> 800 KB
             </p>
@@ -1946,16 +1948,16 @@ export function AdminDashboard() {
 
         <div className="space-y-4">
           {/* Preview */}
-          <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
+          <div className="w-full h-32 md:h-48 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
             {imageUrls.cover ? (
               <img src={imageUrls.cover} alt="Portada" className="w-full h-full object-cover" />
             ) : (
-              <ImageIcon className="w-16 h-16 text-gray-400" />
+              <ImageIcon className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <input
               type="file"
               id="cover-upload"
@@ -1966,7 +1968,7 @@ export function AdminDashboard() {
             />
             <label
               htmlFor="cover-upload"
-              className={`flex items-center gap-2 px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium ${
+              className={`flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium touch-manipulation text-sm md:text-base ${
                 uploadingImage === 'cover' ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
@@ -1988,7 +1990,7 @@ export function AdminDashboard() {
                   const coverImage = companyImages.find(img => img.image_type === 'cover');
                   if (coverImage) deleteImage(coverImage.id, 'cover');
                 }}
-                className="flex items-center gap-2 px-6 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors font-medium"
+                className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors font-medium touch-manipulation text-sm md:text-base"
               >
                 <Trash className="w-5 h-5" />
                 Eliminar Portada
@@ -2110,24 +2112,24 @@ export function AdminDashboard() {
   const renderEntrepreneurSection = () => (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Emprendedor</h1>
-          <p className="text-gray-600 mt-2 text-base">Información del fundador o emprendedor</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Emprendedor</h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">Información del fundador o emprendedor</p>
         </div>
       </div>
 
       {/* Panel informativo */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-        <div className="flex gap-3">
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 md:p-4">
+        <div className="flex gap-2 md:gap-3">
           <div className="flex-shrink-0">
-            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <User className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
           </div>
           <div>
-            <h4 className="font-bold text-blue-900 mb-1">Información del emprendedor</h4>
-            <ul className="space-y-1 text-sm text-blue-800">
+            <h4 className="font-bold text-blue-900 mb-1 text-sm md:text-base">Información del emprendedor</h4>
+            <ul className="space-y-1 text-xs md:text-sm text-blue-800">
               <li>• Agrega una foto del fundador o emprendedor</li>
               <li>• La imagen debe ser cuadrada (recomendado 400x400px)</li>
               <li>• Tamaño máximo: 800KB</li>
@@ -2138,11 +2140,11 @@ export function AdminDashboard() {
       </div>
 
       {/* Formulario */}
-      <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
+      <div className="bg-white border-2 border-gray-200 rounded-xl p-4 md:p-6">
         <div className="space-y-6">
           {/* Imagen del emprendedor */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
               Foto del Emprendedor
             </label>
             
@@ -2151,7 +2153,7 @@ export function AdminDashboard() {
                 <img 
                   src={entrepreneurImageUrl} 
                   alt="Emprendedor"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-gray-200"
                 />
                 <button
                   onClick={() => {
@@ -2160,7 +2162,7 @@ export function AdminDashboard() {
                       saveEntrepreneurData();
                     }
                   }}
-                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-colors"
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-colors touch-manipulation"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -2177,7 +2179,7 @@ export function AdminDashboard() {
                 />
                 <label
                   htmlFor="entrepreneur-image"
-                  className={`flex items-center gap-2 px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium ${
+                  className={`flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg cursor-pointer transition-all font-medium touch-manipulation text-sm md:text-base ${
                     uploadingEntrepreneurImage ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
@@ -2193,14 +2195,14 @@ export function AdminDashboard() {
                     </>
                   )}
                 </label>
-                <p className="text-sm text-gray-500">Máximo 800KB • Formato cuadrado recomendado</p>
+                <p className="text-xs md:text-sm text-gray-500">Máximo 800KB • Formato cuadrado recomendado</p>
               </div>
             )}
           </div>
 
           {/* Nombre del emprendedor */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
               Nombre del Emprendedor
             </label>
             <input
@@ -2208,16 +2210,16 @@ export function AdminDashboard() {
               value={entrepreneurName}
               onChange={(e) => setEntrepreneurName(e.target.value)}
               placeholder="Ej: Juan Pérez González"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[hsl(111,29%,23%)] focus:ring-2 focus:ring-[hsl(111,29%,23%)]/20 transition-all text-gray-900"
+              className="w-full px-3 md:px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[hsl(111,29%,23%)] focus:ring-2 focus:ring-[hsl(111,29%,23%)]/20 transition-all text-gray-900 text-sm md:text-base"
             />
-            <p className="text-sm text-gray-500 mt-2">Este nombre se mostrará junto a la foto en la ficha pública</p>
+            <p className="text-xs md:text-sm text-gray-500 mt-2">Este nombre se mostrará junto a la foto en la ficha pública</p>
           </div>
 
           {/* Botón guardar */}
           <div className="flex justify-end pt-4 border-t border-gray-200">
             <button
               onClick={saveEntrepreneurData}
-              className="flex items-center gap-2 px-8 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 md:px-8 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg touch-manipulation text-sm md:text-base"
             >
               <Check className="w-5 h-5" />
               Guardar Cambios
@@ -2228,19 +2230,19 @@ export function AdminDashboard() {
 
       {/* Vista previa */}
       {(entrepreneurImageUrl || entrepreneurName) && (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Vista Previa</h3>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center gap-4">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4">Vista Previa</h3>
+          <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm">
+            <div className="flex items-center gap-3 md:gap-4">
               {entrepreneurImageUrl ? (
                 <img 
                   src={entrepreneurImageUrl} 
                   alt={entrepreneurName || 'Emprendedor'}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-gray-200"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-10 h-10 text-gray-400" />
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
                 </div>
               )}
               <div>
@@ -2470,14 +2472,14 @@ export function AdminDashboard() {
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Horarios de Atención</h2>
-            <p className="text-gray-600">Configura los días y horarios en que atiendes a tus clientes</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Horarios de Atención</h2>
+            <p className="text-gray-600 text-sm md:text-base">Configura los días y horarios en que atiendes a tus clientes</p>
           </div>
           <button
             onClick={saveBusinessHours}
-            className="flex items-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white px-4 md:px-6 py-3 rounded-lg shadow-md hover:shadow-lg transition-all font-medium touch-manipulation text-sm md:text-base"
           >
             <Save className="w-5 h-5" />
             Guardar Horarios
@@ -2491,8 +2493,8 @@ export function AdminDashboard() {
             <p className="mt-4 text-gray-600">Cargando horarios...</p>
           </div>
         ) : (
-          <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
-            <div className="space-y-4">
+          <div className="bg-white border-2 border-gray-200 rounded-xl p-4 md:p-6 shadow-sm">
+            <div className="space-y-3 md:space-y-4">
               {daysOfWeek.map((day) => {
                 const hourData = (businessHours || []).find(h => h?.day_of_week === day.id) || {
                   day_of_week: day.id,
@@ -2505,16 +2507,16 @@ export function AdminDashboard() {
                 return (
                   <div 
                     key={day.id}
-                    className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     {/* Día de la semana */}
-                    <div className="w-32">
-                      <p className="font-bold text-gray-800">{day.label}</p>
+                    <div className="sm:w-32">
+                      <p className="font-bold text-gray-800 text-sm md:text-base">{day.label}</p>
                     </div>
 
                     {/* Switches de estado */}
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-center gap-3 md:gap-4 flex-wrap">
+                      <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
                         <input
                           type="checkbox"
                           checked={hourData.is_closed || false}
@@ -2546,10 +2548,10 @@ export function AdminDashboard() {
                           }}
                           className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                         />
-                        <span className="text-sm text-gray-700">Cerrado</span>
+                        <span className="text-xs md:text-sm text-gray-700">Cerrado</span>
                       </label>
 
-                      <label className="flex items-center gap-2 cursor-pointer">
+                      <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
                         <input
                           type="checkbox"
                           checked={hourData.is_24_hours || false}
@@ -2581,30 +2583,30 @@ export function AdminDashboard() {
                           }}
                           className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                         />
-                        <span className="text-sm text-gray-700">24 horas</span>
+                        <span className="text-xs md:text-sm text-gray-700">24 horas</span>
                       </label>
                     </div>
 
                     {/* Horarios */}
                     {!hourData.is_closed && !hourData.is_24_hours && (
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm text-gray-600">Abre:</label>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 md:gap-3 flex-1 w-full sm:w-auto">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <label className="text-xs md:text-sm text-gray-600 flex-shrink-0">Abre:</label>
                           <input
                             type="time"
                             value={hourData.opens_at || '07:00'}
                             onChange={(e) => updateHour(day.id, 'opens_at', e.target.value)}
-                            className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
+                            className="px-2 md:px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900 text-sm md:text-base flex-1 sm:flex-none"
                           />
                         </div>
-                        <span className="text-gray-400">—</span>
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm text-gray-600">Cierra:</label>
+                        <span className="text-gray-400 hidden sm:inline">—</span>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <label className="text-xs md:text-sm text-gray-600 flex-shrink-0">Cierra:</label>
                           <input
                             type="time"
                             value={hourData.closes_at || '18:00'}
                             onChange={(e) => updateHour(day.id, 'closes_at', e.target.value)}
-                            className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900"
+                            className="px-2 md:px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-[hsl(111,29%,23%)] focus:outline-none text-gray-900 text-sm md:text-base flex-1 sm:flex-none"
                           />
                         </div>
                       </div>
@@ -2612,15 +2614,15 @@ export function AdminDashboard() {
 
                     {/* Estado visual */}
                     {hourData.is_closed && (
-                      <div className="flex-1 text-center">
-                        <span className="px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium">
+                      <div className="flex-1 text-center sm:text-left w-full sm:w-auto">
+                        <span className="inline-block px-3 md:px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium text-xs md:text-sm">
                           Cerrado
                         </span>
                       </div>
                     )}
                     {hourData.is_24_hours && (
-                      <div className="flex-1 text-center">
-                        <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium">
+                      <div className="flex-1 text-center sm:text-left w-full sm:w-auto">
+                        <span className="inline-block px-3 md:px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium text-xs md:text-sm">
                           Abierto 24 horas
                         </span>
                       </div>
@@ -2633,16 +2635,16 @@ export function AdminDashboard() {
         )}
 
         {/* Info Panel */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-xl p-6">
-          <div className="flex gap-3">
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-xl p-4 md:p-6">
+          <div className="flex gap-2 md:gap-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                <Clock className="w-6 h-6 text-white" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-blue-900 mb-2">Sobre los horarios de atención</h4>
-              <ul className="space-y-1 text-sm text-blue-800">
+              <h4 className="font-bold text-blue-900 mb-2 text-sm md:text-base">Sobre los horarios de atención</h4>
+              <ul className="space-y-1 text-xs md:text-sm text-blue-800">
                 <li>• Los horarios se muestran en tu perfil público para que tus clientes sepan cuándo estás disponible</li>
                 <li>• Marca "Cerrado" para días que no atiendes</li>
                 <li>• Marca "24 horas" si tu negocio está disponible todo el día</li>
@@ -3286,9 +3288,9 @@ export function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className="flex-1 lg:ml-0 w-full">
         {/* Top Bar */}
-        <div className="bg-white border-b-2 border-gray-200 px-6 py-4 shadow-sm">
+        <div className="bg-white border-b-2 border-gray-200 px-4 md:px-6 py-4 shadow-sm sticky top-0 z-40">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button 
@@ -3311,7 +3313,7 @@ export function AdminDashboard() {
         </div>
 
         {/* Page Content */}
-        <div className="p-8">
+        <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
           {renderContent()}
         </div>
       </div>
