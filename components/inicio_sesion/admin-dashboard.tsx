@@ -763,9 +763,11 @@ export function AdminDashboard() {
   const deleteLink = async (linkId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este enlace?')) return;
     
-    // Si es un link de tipo platform (red social), eliminar de la tabla social_links
+    // Si el link tiene un ID real (no es temporal), eliminarlo de la base de datos
     const link = links.find(l => l.id === linkId);
-    if (link && link.type === "platform" && link.id !== 'whatsapp') {
+    const isTemporaryLink = linkId.startsWith('link-');
+    
+    if (link && !isTemporaryLink) {
       try {
         const { error } = await supabase
           .from('social_links')
@@ -796,31 +798,63 @@ export function AdminDashboard() {
   const saveEdit = async (linkId: string) => {
     const link = links.find(l => l.id === linkId);
     
-    // Si es un link de tipo platform (red social), actualizar en la tabla social_links
-    if (link && link.type === "platform" && link.id !== 'whatsapp' && companyData) {
-      try {
+    if (!companyData) {
+      alert('Error: No se pudo identificar la empresa');
+      return;
+    }
+
+    try {
+      // Verificar si el link ya existe en la base de datos
+      const isNewLink = linkId.startsWith('link-');
+      
+      if (isNewLink) {
+        // Crear nuevo link en la base de datos
+        const { data, error } = await supabase
+          .from('social_links')
+          .insert({
+            company_id: companyData.id,
+            platform: editForm.title.toLowerCase().replace(/\s+/g, '-'),
+            url: editForm.url,
+            display_order: links.length
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Actualizar el ID temporal con el ID real de la base de datos
+        setLinks(prev => prev.map(l => 
+          l.id === linkId 
+            ? { ...l, id: data.id, title: editForm.title, url: editForm.url, type: 'custom' }
+            : l
+        ));
+      } else {
+        // Actualizar link existente
         const { error } = await supabase
           .from('social_links')
           .update({ 
             url: editForm.url,
-            platform: link.platformId || link.title.toLowerCase()
+            platform: link?.type === 'custom' 
+              ? editForm.title.toLowerCase().replace(/\s+/g, '-')
+              : link?.platformId || link?.title.toLowerCase()
           })
           .eq('id', linkId);
         
         if (error) throw error;
-      } catch (error) {
-        console.error('Error al actualizar enlace:', error);
-        alert('Error al actualizar el enlace');
-        return;
+
+        // Actualizar en el estado local
+        setLinks(prev => prev.map(l => 
+          l.id === linkId 
+            ? { ...l, title: editForm.title, url: editForm.url } 
+            : l
+        ));
       }
+      
+      cancelEditing();
+    } catch (error) {
+      console.error('Error al guardar enlace:', error);
+      alert('Error al guardar el enlace');
     }
-    
-    setLinks(prev => prev.map(link => 
-      link.id === linkId 
-        ? { ...link, title: editForm.title, url: editForm.url } 
-        : link
-    ));
-    cancelEditing();
   };
 
   const copyLink = (link: LinkItem) => {
@@ -840,8 +874,7 @@ export function AdminDashboard() {
       url: "https://",
       clicks: 0,
       isActive: true,
-      icon: "🔗",
-      platform: "custom"
+      type: "custom"
     };
     setLinks(prev => [...prev, newLink]);
     // Activar modo edición para el nuevo link
