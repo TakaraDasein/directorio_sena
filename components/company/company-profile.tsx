@@ -979,8 +979,8 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
               ) : null;
             })()}
 
-            {/* Gallery Section */}
-            {galleryImages.length > 0 && (
+            {/* Gallery Section - DESHABILITADA TEMPORALMENTE */}
+            {false && galleryImages.length > 0 && (
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-4">
