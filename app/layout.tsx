@@ -10,24 +10,24 @@ const onest = Onest({
 })
 
 export const metadata: Metadata = {
-  title: "Flowly - Work smarter, not harder with automated workflows",
+  title: "Directorio Empresarial Sena | Fondo Emprender",
   description:
-    "Automate workflows, streamline tasks, and collaborate seamlessly with Flowly. Boost productivity and efficiency for teams of all sizes.",
-  keywords: "workflow automation, task management, team collaboration, productivity tools",
-  authors: [{ name: "Flowly Team" }],
+    "Directorio oficial de empresas, egresados e instructores del SENA. Encuentra y conecta con emprendedores del Fondo Emprender.",
+  keywords: "SENA, Fondo Emprender, directorio empresarial, egresados SENA, empresas SENA, emprendedores Colombia",
+  authors: [{ name: "SENA" }],
   robots: "index, follow",
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://flowly.com",
-    title: "Flowly - Automated Workflow Solutions",
-    description: "Streamline your team's workflow with Flowly's powerful automation tools.",
-    siteName: "Flowly",
+    locale: "es_CO",
+    url: "https://www.directoriosena.com",
+    title: "Directorio Empresarial Sena | Fondo Emprender",
+    description: "Directorio oficial de empresas, egresados e instructores del SENA.",
+    siteName: "Directorio SENA",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Flowly - Automated Workflow Solutions",
-    description: "Streamline your team's workflow with Flowly's powerful automation tools.",
+    title: "Directorio Empresarial Sena | Fondo Emprender",
+    description: "Directorio oficial de empresas, egresados e instructores del SENA.",
   },
   icons: {
     icon: "/favicon.ico",

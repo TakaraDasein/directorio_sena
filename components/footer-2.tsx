@@ -79,7 +79,18 @@ export function Footer2() {
 
           <div className="flex flex-col lg:flex-row justify-between items-center gap-12 text-center">
             <p className="text-white/70 order-2 md:order-1">
-              © {new Date().getFullYear()} Directorio SENA. Todos los derechos reservados.
+              © {new Date().getFullYear()} Directorio SENA | {" "}
+              <Link href="/cristofer" className="hover:text-white transition-colors">
+                V1TR0
+              </Link>
+              {" | "}
+              <Link href="/volando-entre-dos" className="hover:text-white transition-colors">
+                VED
+              </Link>
+              {" | "}
+              <Link href="/studios-nova-sas" className="hover:text-white transition-colors">
+                Andres Bosa
+              </Link>
             </p>
 
             <nav
