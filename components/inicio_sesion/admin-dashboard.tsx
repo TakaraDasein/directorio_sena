@@ -1998,7 +1998,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* Gallery Section */}
+      {/* Gallery Section - DESHABILITADA TEMPORALMENTE */}
+      {false && (
       <div className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -2082,6 +2083,7 @@ export function AdminDashboard() {
           </div>
         )}
       </div>
+      )}
 
       {/* Info Panel */}
       <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-xl p-6">
