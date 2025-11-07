@@ -29,6 +29,7 @@ import {
   Image as ImageIcon,
   Upload,
   Trash,
+  Video,
   MessageSquare,
   Star,
   Check,
@@ -160,6 +161,10 @@ export function AdminDashboard() {
   const [entrepreneurImageUrl, setEntrepreneurImageUrl] = useState("");
   const [uploadingEntrepreneurImage, setUploadingEntrepreneurImage] = useState(false);
   
+  // YouTube Video
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [youtubeError, setYoutubeError] = useState<string | null>(null);
+  
   const router = useRouter();
   const supabase = createClient();
 
@@ -168,6 +173,7 @@ export function AdminDashboard() {
     { id: "links", label: "Enlaces", icon: Link, active: true },
     { id: "shop", label: "Tienda", icon: Store },
     { id: "images", label: "Imágenes", icon: ImageIcon },
+    { id: "video", label: "Video", icon: Video },
     { id: "entrepreneur", label: "Emprendedor", icon: User },
     { id: "hours", label: "Horarios", icon: Clock },
     { id: "blogs", label: "Blogs", icon: FileText },
@@ -224,6 +230,9 @@ export function AdminDashboard() {
         // Cargar datos del emprendedor
         setEntrepreneurName(company.entrepreneur_name || '');
         setEntrepreneurImageUrl(company.entrepreneur_image_url || '');
+        
+        // Cargar video de YouTube
+        setYoutubeUrl(company.youtube_video_url || '');
         
         // Establecer perfil de usuario
         setUserProfile({
@@ -1308,6 +1317,54 @@ export function AdminDashboard() {
     }
   };
 
+  // Funciones para YouTube Video
+  const extractYouTubeId = (url: string): string | null => {
+    // Soporta múltiples formatos de URLs de YouTube
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/shorts\/([^&\n?#]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    return null;
+  };
+
+  const validateYouTubeUrl = (url: string): boolean => {
+    if (!url) return true; // Permitir vacío
+    return extractYouTubeId(url) !== null;
+  };
+
+  const saveYouTubeVideo = async () => {
+    if (!companyData) return;
+
+    setYoutubeError(null);
+
+    // Validar URL si no está vacía
+    if (youtubeUrl && !validateYouTubeUrl(youtubeUrl)) {
+      setYoutubeError('URL de YouTube inválida. Por favor ingresa una URL válida.');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ youtube_video_url: youtubeUrl || null })
+        .eq('id', companyData.id);
+      
+      if (error) throw error;
+      
+      alert('Video guardado con éxito');
+    } catch (error) {
+      console.error('Error al guardar video:', error);
+      alert('Error al guardar el video');
+    }
+  };
+
   const renderLinksSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -2258,6 +2315,141 @@ export function AdminDashboard() {
     </div>
   );
 
+  const renderVideoSection = () => {
+    const videoId = youtubeUrl ? extractYouTubeId(youtubeUrl) : null;
+    
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Video de YouTube</h1>
+            <p className="text-gray-600 mt-2 text-sm md:text-base">Agrega un video de YouTube a tu ficha pública</p>
+          </div>
+        </div>
+
+        {/* Panel informativo */}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 md:p-4">
+          <div className="flex gap-2 md:gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Video className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+            </div>
+            <div>
+              <h4 className="font-bold text-blue-900 mb-1 text-sm md:text-base">Cómo agregar un video</h4>
+              <ul className="space-y-1 text-xs md:text-sm text-blue-800">
+                <li>• Copia la URL completa del video de YouTube</li>
+                <li>• Soporta URLs de: youtube.com/watch, youtu.be, youtube.com/shorts</li>
+                <li>• El video se mostrará en tu ficha pública</li>
+                <li>• Puedes cambiar o eliminar el video en cualquier momento</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Formulario */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-4 md:p-6">
+          <div className="space-y-6">
+            {/* Input URL */}
+            <div>
+              <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                URL del Video de YouTube
+              </label>
+              <input
+                type="text"
+                value={youtubeUrl}
+                onChange={(e) => {
+                  setYoutubeUrl(e.target.value);
+                  setYoutubeError(null);
+                }}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full px-3 md:px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[hsl(111,29%,23%)] focus:ring-2 focus:ring-[hsl(111,29%,23%)]/20 transition-all text-gray-900 text-sm md:text-base"
+              />
+              <p className="text-xs md:text-sm text-gray-500 mt-2">
+                Ejemplo: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+              </p>
+              {youtubeError && (
+                <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                  <XCircle className="w-4 h-4" />
+                  {youtubeError}
+                </p>
+              )}
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
+              {youtubeUrl && (
+                <button
+                  onClick={() => {
+                    setYoutubeUrl('');
+                    setYoutubeError(null);
+                  }}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium text-sm md:text-base"
+                >
+                  <Trash className="w-4 h-4" />
+                  Limpiar
+                </button>
+              )}
+              <button
+                onClick={saveYouTubeVideo}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 md:px-8 py-3 bg-[hsl(111,29%,23%)] hover:bg-[hsl(111,29%,18%)] text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg touch-manipulation text-sm md:text-base"
+              >
+                <Save className="w-5 h-5" />
+                Guardar Video
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Vista previa */}
+        {videoId && (
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-4 md:p-6">
+            <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4">Vista Previa</h3>
+            <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm">
+              <div className="aspect-video w-full rounded-lg overflow-hidden">
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title="YouTube video preview"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                <Video className="w-4 h-4" />
+                <span>Este video se mostrará en tu ficha pública</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ejemplos de URLs */}
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3">Ejemplos de URLs válidas</h3>
+          <div className="space-y-2 text-xs md:text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-green-600 font-mono">✓</span>
+              <code className="text-gray-700">https://www.youtube.com/watch?v=dQw4w9WgXcQ</code>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-600 font-mono">✓</span>
+              <code className="text-gray-700">https://youtu.be/dQw4w9WgXcQ</code>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-600 font-mono">✓</span>
+              <code className="text-gray-700">https://www.youtube.com/shorts/dQw4w9WgXcQ</code>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="text-green-600 font-mono">✓</span>
+              <code className="text-gray-700">https://www.youtube.com/embed/dQw4w9WgXcQ</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderReviewsSection = () => (
     <div className="space-y-6">
       {/* Header */}
@@ -3174,6 +3366,8 @@ export function AdminDashboard() {
         return renderShopSection();
       case "images":
         return renderImagesSection();
+      case "video":
+        return renderVideoSection();
       case "entrepreneur":
         return renderEntrepreneurSection();
       case "hours":

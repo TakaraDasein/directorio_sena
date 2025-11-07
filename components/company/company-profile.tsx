@@ -939,6 +939,46 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
               </CardContent>
             </Card>
 
+            {/* YouTube Video Section */}
+            {(company as any).youtube_video_url && (() => {
+              const extractYouTubeId = (url: string): string | null => {
+                const patterns = [
+                  /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+                  /youtube\.com\/shorts\/([^&\n?#]+)/
+                ];
+                
+                for (const pattern of patterns) {
+                  const match = url.match(pattern);
+                  if (match && match[1]) {
+                    return match[1];
+                  }
+                }
+                return null;
+              };
+              
+              const videoId = extractYouTubeId((company as any).youtube_video_url);
+              
+              return videoId ? (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold">Video</h3>
+                    </div>
+                    
+                    <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        title="Video de la empresa"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      ></iframe>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
+
             {/* Gallery Section */}
             {galleryImages.length > 0 && (
               <Card>
