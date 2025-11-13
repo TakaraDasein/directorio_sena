@@ -572,7 +572,7 @@ export default function KitDigitalPage() {
             <div className="max-w-3xl mx-auto space-y-4">
               {[
                 {
-                  q: "¿Quién puede acceder al Kit Digital Empresas SENA?",
+                  q: "¿Quién puede acceder al Kit Digital Empresas?",
                   a: "Empresas ganadoras del Fondo Emprender, egresados Sena y Agentes digitalizadores."
                 },
                 {
