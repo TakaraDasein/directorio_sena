@@ -8,6 +8,7 @@ import Link from "next/link"
 
 const MENU_ITEMS = [
   { label: "Directorio", href: "/search" },
+  { label: "Kit Digital", href: "/kit-digital" },
   { label: "Blogs", href: "/blog" }, 
 ] as const
 

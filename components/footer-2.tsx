@@ -41,6 +41,9 @@ export function Footer2() {
                 <Link href="/search" className="text-white/80 hover:text-white transition-colors">
                   Directorio
                 </Link>
+                <Link href="/kit-digital" className="text-white/80 hover:text-white transition-colors">
+                  Kit Digital
+                </Link>
                 <Link href="/contacto" className="text-white/80 hover:text-white transition-colors">
                   Contacto
                 </Link>
