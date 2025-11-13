@@ -34,7 +34,7 @@ import { useState } from "react"
 export default function KitDigitalPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null)
 
-  const whatsappLink = "https://wa.me/573018147846?text=Hola%2C%20quiero%20información%20sobre%20el%20Kit%20Digital%20Empresas"
+  const whatsappLink = "https://wa.me/573126503491?text=Hola%2C%20quiero%20información%20sobre%20el%20Kit%20Digital%20Empresas"
 
   return (
     <>
