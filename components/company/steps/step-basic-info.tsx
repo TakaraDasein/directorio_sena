@@ -26,16 +26,16 @@ interface StepBasicInfoProps {
 }
 
 const categoryOptions: typeof CATEGORY_OPTIONS = [
-  { value: 'egresado', label: 'Egresado SENA', description: 'Profesional egresado del SENA' },
-  { value: 'empresa', label: 'Empresa', description: 'Empresa o negocio' },
-  { value: 'instructor', label: 'Instructor SENA', description: 'Instructor o formador del SENA' },
+  { value: 'emprendimiento-egresado', label: 'Egresado con Emprendimiento', description: 'Emprendimiento de egresado del SENA' },
+  { value: 'empresa-fe', label: 'Empresa Ganadora FE', description: 'Empresa ganadora del Fondo Emprender' },
+  { value: 'agente-digitalizador', label: 'Agente Digitalizador', description: 'Agente digitalizador aprobado' },
 ]
 
 export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, currentCompanyId = null }: StepBasicInfoProps) {
   const supabase = createClient()
   const [companyName, setCompanyName] = useState(formData.company_name || "")
   const [slug, setSlug] = useState(formData.slug || "")
-  const [category, setCategory] = useState(formData.category || "empresa")
+  const [category, setCategory] = useState(formData.category || "empresa-fe")
   const [shortDescription, setShortDescription] = useState(formData.short_description || "")
   
   const [checkingSlug, setCheckingSlug] = useState(false)
@@ -271,10 +271,14 @@ export function StepBasicInfo({ formData, onUpdate, onNext, isEditMode = false, 
           </SelectTrigger>
           <SelectContent className="bg-white">
             {categoryOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value} className="text-gray-900">
+              <SelectItem 
+                key={option.value} 
+                value={option.value} 
+                className="text-gray-900 data-[highlighted]:bg-primary data-[highlighted]:text-white focus:bg-primary focus:text-white"
+              >
                 <div className="flex flex-col items-start">
-                  <span className="font-medium text-gray-900">{option.label}</span>
-                  <span className="text-xs text-gray-600">{option.description}</span>
+                  <span className="font-medium">{option.label}</span>
+                  <span className="text-xs opacity-90">{option.description}</span>
                 </div>
               </SelectItem>
             ))}

@@ -12,7 +12,7 @@ export type Database = {
           user_id: string
           slug: string
           company_name: string
-          category: 'egresado' | 'empresa' | 'instructor'
+          category: 'emprendimiento-egresado' | 'empresa-fe' | 'agente-digitalizador'
           email: string
           phone: string | null
           whatsapp: string | null
@@ -43,7 +43,7 @@ export type Database = {
           user_id: string
           slug: string
           company_name: string
-          category: 'egresado' | 'empresa' | 'instructor'
+          category: 'emprendimiento-egresado' | 'empresa-fe' | 'agente-digitalizador'
           email: string
           phone?: string | null
           whatsapp?: string | null
@@ -74,7 +74,7 @@ export type Database = {
           user_id?: string
           slug?: string
           company_name?: string
-          category?: 'egresado' | 'empresa' | 'instructor'
+          category?: 'emprendimiento-egresado' | 'empresa-fe' | 'agente-digitalizador'
           email?: string
           phone?: string | null
           whatsapp?: string | null
@@ -371,7 +371,7 @@ export interface CompanyRegistrationForm {
   // Paso 2: Datos básicos
   company_name: string
   slug: string
-  category: 'egresado' | 'empresa' | 'instructor'
+  category: 'emprendimiento-egresado' | 'empresa-fe' | 'agente-digitalizador'
   
   // Paso 3: Información detallada
   phone: string

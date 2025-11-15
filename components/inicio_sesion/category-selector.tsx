@@ -107,24 +107,40 @@ const CategorySelector: React.FC = () => {
           {categories.map((category) => (
             <Card
               key={category.id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg bg-white ${
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg group ${
                 selectedCategory === category.id
-                  ? "ring-2 ring-primary border-primary shadow-lg"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "ring-2 ring-primary border-primary shadow-lg bg-primary hover:bg-primary/90"
+                  : "border-gray-200 hover:border-gray-300 bg-white hover:bg-primary/5"
               }`}
               onClick={() => setSelectedCategory(category.id)}
             >
-              <CardContent className="p-6 bg-white">
+              <CardContent className={`p-6 transition-colors duration-200 ${
+                selectedCategory === category.id
+                  ? "bg-transparent"
+                  : "bg-transparent"
+              }`}>
                 <div className="flex items-start gap-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className={`text-lg font-semibold mb-2 transition-colors ${
+                      selectedCategory === category.id
+                        ? "text-white"
+                        : "text-gray-900 group-hover:text-gray-900"
+                    }`}>
                       {category.title}
                     </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
+                    <p className={`text-sm leading-relaxed transition-colors ${
+                      selectedCategory === category.id
+                        ? "text-white/90"
+                        : "text-gray-600 group-hover:text-gray-700"
+                    }`}>
                       {category.description}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-xl text-white ${category.color} flex-shrink-0`}>
+                  <div className={`p-3 rounded-xl flex-shrink-0 ${
+                    selectedCategory === category.id
+                      ? "bg-white text-primary"
+                      : "bg-primary text-white"
+                  }`}>
                     {category.icon}
                   </div>
                 </div>
