@@ -119,17 +119,24 @@ export function StepCompanyDetails({ formData, onUpdate, onNext, onBack }: StepC
             <Phone className="h-4 w-4" />
             Teléfono de Contacto <span className="text-red-500">*</span>
           </Label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="+57 300 123 4567"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="text-base text-gray-900 bg-white border-gray-300"
-            required
-          />
+          <div className="relative">
+            <div className="flex items-center">
+              <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-100 text-gray-700 text-sm rounded-l-md font-medium">
+                +57
+              </span>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="300 123 4567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="rounded-l-none text-base text-gray-900 bg-white border-gray-300"
+                required
+              />
+            </div>
+          </div>
           <p className="text-sm text-gray-600">
-            Incluye el código de país para llamadas internacionales
+            Número de teléfono colombiano (10 dígitos)
           </p>
         </div>
 
