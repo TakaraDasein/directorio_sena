@@ -381,6 +381,12 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
             >
               Blogs
             </Link>
+            <Link 
+              href="/kit-digital" 
+              className="text-white/90 hover:text-white transition-colors text-sm font-medium"
+            >
+              Kit Digital
+            </Link>
             <Link href={isOwner ? "/admin" : "/auth"}>
               <Button 
                 variant="outline" 
@@ -417,6 +423,13 @@ export function CompanyProfile({ company }: CompanyProfileProps) {
               onClick={() => setIsMenuOpen(false)}
             >
               Blogs
+            </Link>
+            <Link 
+              href="/kit-digital"
+              className="block text-white/90 hover:text-white transition-colors text-sm font-medium py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Kit Digital
             </Link>
             <Link href={isOwner ? "/admin" : "/auth"} onClick={() => setIsMenuOpen(false)}>
               <Button 
