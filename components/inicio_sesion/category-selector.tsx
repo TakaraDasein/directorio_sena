@@ -37,22 +37,22 @@ const CategorySelector: React.FC = () => {
   const categories: CategoryOption[] = [
     {
       id: "egresado",
-      title: "Egresado SENA",
-      description: "Soy egresado del SENA y quiero conectar con otros profesionales y mostrar mi experiencia.",
+      title: "Egresado con Emprendimiento",
+      description: "Tengo un emprendimiento, soy egresado del SENA y busco conectar para impulsar mi proyecto.",
       icon: <User className="h-8 w-8" />,
       color: "bg-primary"
     },
     {
       id: "empresa",
-      title: "Empresa", 
-      description: "Represento una empresa y busco talento egresado del SENA para proyectos y oportunidades.",
+      title: "Empresa Ganadora FE", 
+      description: "Soy una empresa ganadora del Fondo Emprender y busco visibilizar y digitalizar mi negocio para seguir creciendo.",
       icon: <Building2 className="h-8 w-8" />,
       color: "bg-primary"
     },
     {
       id: "instructor",
-      title: "Instructor SENA",
-      description: "Soy instructor del SENA y quiero estar disponible para la comunidad educativa.",
+      title: "Agente Digitalizador",
+      description: "Soy un agente digitalizador aprobado por el directorio y ofrezco soluciones para la transformación digital.",
       icon: <Briefcase className="h-8 w-8" />,
       color: "bg-primary"
     }
@@ -95,7 +95,7 @@ const CategorySelector: React.FC = () => {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">
-            ¿Cuál es tu objetivo principal en el directorio SENA?
+            Selecciona el perfil que mejor representa tu actividad en el Directorio SENA.
           </h1>
           <p className="text-gray-600">
             Perfil para: <span className="font-semibold text-primary">{companyName}</span>
