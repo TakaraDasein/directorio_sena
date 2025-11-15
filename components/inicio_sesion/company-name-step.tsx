@@ -128,7 +128,7 @@ const CompanyNameStep: React.FC = () => {
                 <Input
                   id="company-name"
                   type="text"
-                  placeholder="Ejemplo: TechCali Solutions"
+                  placeholder="Ejemplo: V1TR0"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 h-12 text-base"
