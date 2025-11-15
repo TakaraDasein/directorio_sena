@@ -29,9 +29,13 @@ interface Company {
 }
 
 const categoryLabels: Record<string, string> = {
-  'egresado': 'Egresado SENA',
-  'empresa': 'Empresa',
-  'instructor': 'Instructor SENA'
+  'emprendimiento-egresado': 'Egresado con Emprendimiento',
+  'empresa-fe': 'Empresa Ganadora FE',
+  'agente-digitalizador': 'Agente Digitalizador',
+  // Legacy values para compatibilidad
+  'egresado': 'Egresado con Emprendimiento',
+  'empresa': 'Empresa Ganadora FE',
+  'instructor': 'Agente Digitalizador'
 }
 
 function SearchContent() {

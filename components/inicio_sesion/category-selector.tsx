@@ -36,23 +36,23 @@ const CategorySelector: React.FC = () => {
 
   const categories: CategoryOption[] = [
     {
-      id: "egresado",
+      id: "emprendimiento-egresado",
       title: "Egresado con Emprendimiento",
       description: "Tengo un emprendimiento, soy egresado del SENA y busco conectar para impulsar mi proyecto.",
       icon: <User className="h-8 w-8" />,
       color: "bg-primary"
     },
     {
-      id: "empresa",
+      id: "empresa-fe",
       title: "Empresa Ganadora FE", 
-      description: "Soy una empresa ganadora del Fondo Emprender y busco visibilizar y digitalizar mi negocio para seguir creciendo.",
+      description: "Empresa ganadora del Fondo Emprender; busco visibilizar y digitalizar mi negocio para crecer.",
       icon: <Building2 className="h-8 w-8" />,
       color: "bg-primary"
     },
     {
-      id: "instructor",
+      id: "agente-digitalizador",
       title: "Agente Digitalizador",
-      description: "Soy un agente digitalizador aprobado por el directorio y ofrezco soluciones para la transformación digital.",
+      description: "Agente digitalizador aprobado; ofrezco soluciones para la transformación digital.",
       icon: <Briefcase className="h-8 w-8" />,
       color: "bg-primary"
     }

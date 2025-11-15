@@ -434,9 +434,9 @@ export const INDUSTRY_OPTIONS = [
 ] as const
 
 export const CATEGORY_OPTIONS = [
-  { value: 'egresado', label: 'Egresado SENA', description: 'Profesional egresado del SENA' },
-  { value: 'empresa', label: 'Empresa', description: 'Empresa o negocio' },
-  { value: 'instructor', label: 'Instructor SENA', description: 'Instructor o formador del SENA' },
+  { value: 'emprendimiento-egresado', label: 'Egresado con Emprendimiento', description: 'Emprendimiento de egresado del SENA' },
+  { value: 'empresa-fe', label: 'Empresa Ganadora FE', description: 'Empresa ganadora del Fondo Emprender' },
+  { value: 'agente-digitalizador', label: 'Agente Digitalizador', description: 'Agente digitalizador aprobado' },
 ] as const
 
 // Blog types

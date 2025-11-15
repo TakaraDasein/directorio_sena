@@ -30,9 +30,13 @@ interface StepReviewProps {
 
 export function StepReview({ formData, onBack, onSubmit, loading }: StepReviewProps) {
   const categoryLabels = {
-    'egresado': 'Egresado SENA',
-    'empresa': 'Empresa',
-    'instructor': 'Instructor SENA'
+    'emprendimiento-egresado': 'Egresado con Emprendimiento',
+    'empresa-fe': 'Empresa Ganadora FE',
+    'agente-digitalizador': 'Agente Digitalizador',
+    // Legacy values para compatibilidad
+    'egresado': 'Egresado con Emprendimiento',
+    'empresa': 'Empresa Ganadora FE',
+    'instructor': 'Agente Digitalizador'
   }
 
   return (
