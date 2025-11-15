@@ -146,16 +146,23 @@ export function StepCompanyDetails({ formData, onUpdate, onNext, onBack }: StepC
             <Globe className="h-4 w-4" />
             Sitio Web
           </Label>
-          <Input
-            id="website"
-            type="url"
-            placeholder="https://www.tuempresa.com"
-            value={website}
-            onChange={(e) => setWebsite(e.target.value)}
-            className="text-base text-gray-900 bg-white border-gray-300"
-          />
+          <div className="relative">
+            <div className="flex items-center">
+              <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-100 text-gray-700 text-sm rounded-l-md font-medium">
+                https://www.
+              </span>
+              <Input
+                id="website"
+                type="text"
+                placeholder="tuempresa.com"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                className="rounded-l-none text-base text-gray-900 bg-white border-gray-300"
+              />
+            </div>
+          </div>
           <p className="text-sm text-gray-600">
-            URL completa de tu sitio web (opcional)
+            Solo escribe tu dominio (ejemplo: v1tr0.com)
           </p>
         </div>
       </div>
